@@ -24,4 +24,17 @@ defmodule TypeWriterTest do
       assert ProductCode2.__struct__() == %ProductCode2{value: nil}
     end
   end
+
+  deftype Product1 do
+    code :: ProductCode1.t()
+    price :: float()
+  end
+
+  describe "defining a record" do
+    test "using inline syntax generates the struct" do
+      alias TypeWriterTest.Product1
+
+      assert Product1.__struct__() == %Product1{code: nil, price: nil}
+    end
+  end
 end
