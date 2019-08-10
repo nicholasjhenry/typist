@@ -22,6 +22,13 @@ defmodule TypeWriter do
     end
   end
 
+  defmacro deftype({{:., _, [{:__aliases__, _, [type]}, :t]}, _, _}) do
+    quote do
+      defstruct value: nil
+      @type t :: %__MODULE__{value: unquote(type).t()}
+    end
+  end
+
   # The name of the type is contained in the next nested line.
   # [
   #   {:__aliases__, [line: 6], [:ProductCode]},
