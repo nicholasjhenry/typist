@@ -32,6 +32,23 @@ defmodule TypeWriter do
     end
   end
 
+  defmacro deftype(do: {:__block__, _, ast}) do
+    fields = extract_fields(ast)
+
+    struct_body = Enum.map(fields, fn {field, default, _type} -> {field, default} end)
+
+    typespec =
+      Enum.map(fields, fn
+        {field, _default, {module, type}} -> {field, Module.concat([module, type])}
+        {field, _default, type} -> {field, type}
+      end)
+
+    quote do
+      defstruct unquote(struct_body)
+      @type t :: %__MODULE__{unquote_splicing(typespec)}
+    end
+  end
+
   # The name of the type is contained in the next nested line.
   # [
   #   {:__aliases__, [line: 6], [:ProductCode]},

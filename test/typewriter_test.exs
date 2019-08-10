@@ -19,8 +19,6 @@ defmodule TypeWriterTest do
     end
 
     test "using module syntax generates the struct" do
-      alias TypeWriterTest.ProductCode2
-
       assert ProductCode2.__struct__() == %ProductCode2{value: nil}
     end
   end
@@ -35,6 +33,19 @@ defmodule TypeWriterTest do
       alias TypeWriterTest.Product1
 
       assert Product1.__struct__() == %Product1{code: nil, price: nil}
+    end
+
+    defmodule Product2 do
+      use TypeWriter
+
+      deftype do
+        code :: ProductCode1.t()
+        price :: float()
+      end
+    end
+
+    test "using module syntax generates the struct" do
+      assert Product2.__struct__() == %Product2{code: nil, price: nil}
     end
   end
 end
