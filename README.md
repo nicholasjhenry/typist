@@ -19,6 +19,7 @@ defmodule MyApp do
 
   # translates to:
   defmodule ProductCode do
+    @enforce_keys [:value]
     defstruct value: nil
     @type t :: %__MODULE__{value: String.t}
   end
@@ -38,12 +39,13 @@ defmodule MyApp do
 
   # translates to:
   defmodule Product do
+    @enforce_keys [:code, :price]
     defstruct code: nil, price: nil
 
     @type t :: %__MODULE__{code: ProductCode.t, price: float()}
   end
 
-  deftype Product, enforce: true do
+  deftype Product do
     code :: ProductCode.t()
     price :: float()
   end    
@@ -57,7 +59,7 @@ defmodule MyApp do
   end
 
   deftype Product do
-    code :: ProductCode.t(), enforce: true, default: ProductCode.new("ABC123")
+    code :: ProductCode.t(), \\ ProductCode.new("ABC123")
     price :: float()
   end    
 
