@@ -12,10 +12,71 @@ defmodule TypeWriter do
     end
   end
 
+  defmodule RecordType do
+    @moduledoc """
+    A record type, a product type with named fields.
+    """
+    defstruct [:name, :fields]
+  end
+
+  defmodule Field do
+    @moduledoc """
+    A field in a `RecordType`.
+    """
+    defstruct [:name, :type]
+  end
+
+  defmacro deftype({:__aliases__, _, [_module]} = ast, block) do
+    current_module = current_module(__CALLER__.module)
+    type = record_type(current_module, ast, block)
+
+    quote do
+      defmodule unquote(Module.concat([type.name])) do
+        def __type__ do
+          unquote(Macro.escape(type))
+        end
+      end
+    end
+  end
+
+  defp record_type(
+         _current_module,
+         {:__aliases__, _, [module]},
+         do: {:__block__, _, ast_fields}
+       ) do
+    fields = Enum.map(ast_fields, &build_field/1)
+
+    %TypeWriter.RecordType{
+      name: module,
+      fields: fields
+    }
+  end
+
+  defp build_field(
+         {:"::", _,
+          [
+            {name, _, nil},
+            type_to_be_wrapped
+          ]}
+       ) do
+    type = get_type(type_to_be_wrapped)
+    %TypeWriter.Field{name: name, type: type}
+  end
+
+  defmodule SingleCaseUnionType do
+    @moduledoc """
+    Single case union type is used to wrap a primitive.
+
+    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
+    """
+    defstruct [:name, :type]
+  end
+
+  # Non-record types
   defmacro deftype(ast) do
     current_module = current_module(__CALLER__.module)
-    type = maybe_single_case_union_type(current_module, ast)
 
+    type = maybe_single_case_union_type(current_module, ast)
     type = maybe_product_type(current_module, ast, type)
 
     if module_defined?(current_module, type.name) do
@@ -33,14 +94,6 @@ defmodule TypeWriter do
         end
       end
     end
-  end
-
-  # https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
-  defmodule SingleCaseUnionType do
-    @moduledoc """
-    Single case union type is used to wrap a primitive.
-    """
-    defstruct [:name, :type]
   end
 
   # Example: "Single case union type - inline"

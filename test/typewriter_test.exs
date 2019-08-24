@@ -50,4 +50,21 @@ defmodule TypeWriterTest do
              }
     end
   end
+
+  describe "record type" do
+    deftype Product do
+      code :: String.t()
+      price :: String.t()
+    end
+
+    test "inline defines the meta data" do
+      assert Product.__type__() == %TypeWriter.RecordType{
+               name: :Product,
+               fields: [
+                 %TypeWriter.Field{name: :code, type: {:String, :t, []}},
+                 %TypeWriter.Field{name: :price, type: {:String, :t, []}}
+               ]
+             }
+    end
+  end
 end
