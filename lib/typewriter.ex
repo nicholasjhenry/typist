@@ -168,6 +168,21 @@ defmodule TypeWriter do
     defstruct [:name, :types]
   end
 
+  # module
+  def maybe_discriminated_union_type(
+        current_module,
+        {:|, _, union_types},
+        _type
+      ) do
+    types = union_types |> Enum.map(&get_type/1) |> List.flatten()
+
+    %TypeWriter.DiscriminatedUnionType{
+      name: current_module,
+      types: types
+    }
+  end
+
+  # inline
   def maybe_discriminated_union_type(
         _current_module,
         {:"::", _,

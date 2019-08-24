@@ -91,9 +91,22 @@ defmodule TypeWriterTest do
     deftype FirstLast3 :: {String.t(), String.t()}
     deftype Name3 :: Nickname3.t() | FirstLast3.t() | FormatName3.t()
 
+    # @tag :wip
     test "inline" do
       assert Name3.__type__() == %TypeWriter.DiscriminatedUnionType{
                name: :Name3,
+               types: [{:Nickname3, :t, []}, {:FirstLast3, :t, []}, {:FormatName3, :t, []}]
+             }
+    end
+
+    defmodule Name4 do
+      deftype Nickname3.t() | FirstLast3.t() | FormatName3.t()
+    end
+
+    @tag :wip
+    test "module" do
+      assert Name4.__type__() == %TypeWriter.DiscriminatedUnionType{
+               name: :Name4,
                types: [{:Nickname3, :t, []}, {:FirstLast3, :t, []}, {:FormatName3, :t, []}]
              }
     end
