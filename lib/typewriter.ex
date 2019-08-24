@@ -26,7 +26,12 @@ defmodule TypeWriter do
     defstruct [:name, :type]
   end
 
-  defmacro deftype({:__aliases__, _, [_module]} = ast, block) do
+  # Record type - inline
+  # deftype Product do
+  #   code :: ProductCode.t()
+  #   price :: float()
+  # end
+  defmacro deftype({:__aliases__, _, [_module]} = ast, do: block) do
     current_module = current_module(__CALLER__.module)
     type = record_type(current_module, ast, block)
 
@@ -42,7 +47,7 @@ defmodule TypeWriter do
   defp record_type(
          _current_module,
          {:__aliases__, _, [module]},
-         do: {:__block__, _, ast_fields}
+         {:__block__, _, ast_fields}
        ) do
     fields = Enum.map(ast_fields, &build_field/1)
 
@@ -61,6 +66,29 @@ defmodule TypeWriter do
        ) do
     type = get_type(type_to_be_wrapped)
     %TypeWriter.Field{name: name, type: type}
+  end
+
+  # Record type - module
+  # defmodule Product do
+  #   deftype do
+  #     code :: ProductCode.t()
+  #     price :: float()
+  #   end
+  # end
+
+  defmacro deftype(do: {:__block__, _, ast_fields}) do
+    fields = Enum.map(ast_fields, &build_field/1)
+
+    type = %TypeWriter.RecordType{
+      name: :Product2,
+      fields: fields
+    }
+
+    quote do
+      def __type__ do
+        unquote(Macro.escape(type))
+      end
+    end
   end
 
   defmodule SingleCaseUnionType do
