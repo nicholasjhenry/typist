@@ -105,6 +105,7 @@ defmodule TypeWriter do
     current_module = current_module(__CALLER__.module)
 
     type = maybe_single_case_union_type(current_module, ast)
+    type = maybe_discriminated_union_type(current_module, ast, type)
     type = maybe_product_type(current_module, ast, type)
 
     if module_defined?(current_module, type.name) do
@@ -158,8 +159,40 @@ defmodule TypeWriter do
 
   def maybe_single_case_union_type(_current_module, _ast), do: :none
 
+  defmodule DiscriminatedUnionType do
+    @moduledoc """
+    Single case union type is used to wrap a primitive.
+
+    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
+    """
+    defstruct [:name, :types]
+  end
+
+  def maybe_discriminated_union_type(
+        _current_module,
+        {:"::", _,
+         [
+           {:__aliases__, _, [module]},
+           {:|, _, union_types}
+         ]},
+        :none
+      ) do
+    types = union_types |> Enum.map(&get_type/1) |> List.flatten()
+
+    %TypeWriter.DiscriminatedUnionType{
+      name: module,
+      types: types
+    }
+  end
+
+  def maybe_discriminated_union_type(_current_module, _ast, type), do: type
+
   defp get_type({{:., _, [{:__aliases__, _, [type_name]}, type_function]}, _, []}) do
     {type_name, type_function, []}
+  end
+
+  defp get_type({:|, _, union_types}) do
+    union_types |> Enum.map(&get_type/1)
   end
 
   # Product type - inline
