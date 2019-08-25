@@ -37,9 +37,13 @@ defmodule TypeWriter do
   defmacro deftype({:__aliases__, _, [_module]} = ast, do: block) do
     current_module = current_module(__CALLER__.module)
     type = record_type(current_module, ast, block)
+    fields = Enum.map(type.fields, & &1.name)
 
     quote do
       defmodule unquote(Module.concat([type.name])) do
+        @enforce_keys unquote(fields)
+        defstruct unquote(fields)
+
         def __type__ do
           unquote(Macro.escape(type))
         end
@@ -87,7 +91,12 @@ defmodule TypeWriter do
       fields: fields
     }
 
+    fields = Enum.map(type.fields, & &1.name)
+
     quote do
+      @enforce_keys unquote(fields)
+      defstruct unquote(fields)
+
       def __type__ do
         unquote(Macro.escape(type))
       end
