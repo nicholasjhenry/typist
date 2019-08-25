@@ -22,7 +22,7 @@ defmodule TypeWriter.TypeDefinition do
   # - `binary`
   # - `float`
   # - `integer`
-  def from_ast({type, [], _}) do
+  def from_ast({type, _, _}) when is_atom(type) do
     {type, nil, []}
   end
 

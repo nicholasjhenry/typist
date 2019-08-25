@@ -6,10 +6,19 @@ defmodule TypeWriter.SingleUnionTypeTest do
   describe "single case union type" do
     deftype ProductCode1 :: String.t()
 
-    test "inline" do
+    test "inline with alias" do
       assert ProductCode1.__type__() == %TypeWriter.SingleCaseUnionType{
                name: :ProductCode1,
                type: {:String, :t, []}
+             }
+    end
+
+    deftype ProductCode3 :: binary
+
+    test "inline with basic" do
+      assert ProductCode3.__type__() == %TypeWriter.SingleCaseUnionType{
+               name: :ProductCode3,
+               type: {:binary, nil, []}
              }
     end
 
