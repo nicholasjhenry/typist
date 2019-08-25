@@ -31,6 +31,7 @@ defmodule TypeWriter do
   #   code :: ProductCode.t()
   #   price :: float()
   # end
+  # matches: deftype Product do, ... end
   defmacro deftype({:__aliases__, _, [_module]} = ast, do: block) do
     current_module = current_module(__CALLER__.module)
     type = record_type(current_module, ast, block)
