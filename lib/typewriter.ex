@@ -103,6 +103,15 @@ defmodule TypeWriter do
     defstruct [:name, :type]
   end
 
+  defmodule DiscriminatedUnionType do
+    @moduledoc """
+    Single case union type is used to wrap a primitive.
+
+    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
+    """
+    defstruct [:name, :types]
+  end
+
   # Non-record types
   defmacro deftype(ast) do
     current_module = current_module(__CALLER__.module)
@@ -114,6 +123,12 @@ defmodule TypeWriter do
     struct_defn =
       case type do
         %TypeWriter.SingleCaseUnionType{} ->
+          quote do
+            @enforce_keys [:value]
+            defstruct [:value]
+          end
+
+        %TypeWriter.DiscriminatedUnionType{} ->
           quote do
             @enforce_keys [:value]
             defstruct [:value]
@@ -177,15 +192,6 @@ defmodule TypeWriter do
   end
 
   def maybe_single_case_union_type(_current_module, _ast), do: :none
-
-  defmodule DiscriminatedUnionType do
-    @moduledoc """
-    Single case union type is used to wrap a primitive.
-
-    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
-    """
-    defstruct [:name, :types]
-  end
 
   # module
   def maybe_discriminated_union_type(

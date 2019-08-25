@@ -22,6 +22,8 @@ defmodule TypeWriter.DiscriminatedUnionTest do
                },
                Name3.__type__()
              )
+
+      assert %Name3{value: %Nickname3{value: "Jimmy"}}
     end
 
     defmodule Name4 do
@@ -36,6 +38,8 @@ defmodule TypeWriter.DiscriminatedUnionTest do
                },
                Name4.__type__()
              )
+
+      assert %Name4{value: %Nickname3{value: "Jimmy"}}
     end
   end
 end
