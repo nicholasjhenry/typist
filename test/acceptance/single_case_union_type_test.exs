@@ -1,4 +1,4 @@
-defmodule TypeWriter.SingleUnionTypeTest do
+defmodule TypeWriter.SingleCaseUnionTypeTest do
   use ExUnit.Case
 
   use TypeWriter
