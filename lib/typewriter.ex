@@ -1,10 +1,86 @@
 defmodule TypeWriter do
   @moduledoc """
-  A DSL for defining types inspired by F#.
-  """
+  A DSL to define types inspired by libraries such as TypedStruct, Algae and the F# language.
 
-  # Types:
-  # -
+  ## Definitions
+
+  * Discriminated union (disjoint union, sum type):
+  * Product type (record):
+
+  ## References:
+
+  * [Designing with Types Series](https://fsharpforfunandprofit.com/posts/designing-with-types-intro/)
+
+  ## Single Case Union Type
+
+  See: [Designing with types: Single case union types](https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/)
+
+      iex> use TypeWriter
+      ...> module = deftype ProductCode :: String.t
+      ...> match?({:module, ProductCode, _, _}, module)
+      true
+
+      iex> module = defmodule ProductCode do
+      ...>   use TypeWriter
+      ...>   deftype ProductCode :: String.t
+      ...> end
+      ...> match?({:module, ProductCode, _, _}, module)
+      true
+
+  Both examples generate the following code:
+
+      defmodule ProductCode do
+        @enforce_keys [:value]
+        defstruct [:value]
+        @type t :: %__MODULE__{value: String.t()}
+      end
+
+  ## Discriminated Union
+
+  iex> use TypeWriter
+  ...> deftype Nickname :: String.t
+  ...> deftype FirstLast :: {String.t, String.t}
+  ...> module = deftype Name :: Nickname.t | FirstLast.t
+  ...> match?({:module, Name, _, _}, module)
+  true
+
+  Example translate to:
+
+      defmodule Name do
+        @enforce_keys [:value]
+        defstruct value: nil
+        @type t :: %__MODULE__{value: Nickname.t | FirstLast.t}
+      end
+
+  ## Record Type
+
+      iex> use TypeWriter
+      ...> module = deftype Product do
+      ...>   code :: ProductCode.t()
+      ...>   price :: float()
+      ...> end
+      ...> match?({:module, Product, _, _}, module)
+      true
+
+      iex> module = defmodule Product do
+      ...>   use TypeWriter
+      ...>   deftype do
+      ...>     code :: ProductCode.t()
+      ...>     price :: integer()
+      ...>   end
+      ...> end
+      ...> match?({:module, Product, _, _}, module)
+      true
+
+  Both examples generate the following code:
+
+      defmodule Product do
+        @enforce_keys [:code, :price]
+        defstruct [:code, :price]
+
+        @type t :: %__MODULE__{code: ProductCode.t(), price: integer()}
+      end
+  """
 
   import TypeWriter.TypeDefinition
 
