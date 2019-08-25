@@ -3,10 +3,10 @@ defmodule TypeWriter.SingleUnionTypeTest do
 
   use TypeWriter
 
-  describe "defining a single case union type" do
+  describe "single case union type" do
     deftype ProductCode1 :: String.t()
 
-    test "inline defines the meta data" do
+    test "inline" do
       assert ProductCode1.__type__() == %TypeWriter.SingleCaseUnionType{
                name: :ProductCode1,
                type: {:String, :t, []}
@@ -19,7 +19,7 @@ defmodule TypeWriter.SingleUnionTypeTest do
       deftype String.t()
     end
 
-    test "module defines the meta data" do
+    test "module" do
       assert ProductCode2.__type__() == %TypeWriter.SingleCaseUnionType{
                name: :ProductCode2,
                type: {:String, :t, []}

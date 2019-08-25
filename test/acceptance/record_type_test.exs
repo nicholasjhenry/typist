@@ -9,7 +9,7 @@ defmodule TypeWriter.RecordTypeTest do
       price :: String.t()
     end
 
-    test "inline defines the meta data" do
+    test "inline" do
       assert Product1.__type__() == %TypeWriter.RecordType{
                name: :Product1,
                fields: [
@@ -26,7 +26,7 @@ defmodule TypeWriter.RecordTypeTest do
       end
     end
 
-    test "module defines the meta data" do
+    test "module" do
       assert Product2.__type__() == %TypeWriter.RecordType{
                name: :Product2,
                fields: [
