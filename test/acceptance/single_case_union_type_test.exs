@@ -12,6 +12,8 @@ defmodule TypeWriter.SingleCaseUnionTypeTest do
                ProductCode1.__type__()
              )
 
+      assert ProductCode1.__spec__() == "@type(t :: %__MODULE__{value: String.t()})"
+
       assert %ProductCode1{value: "ABC123"}
     end
 
@@ -24,11 +26,14 @@ defmodule TypeWriter.SingleCaseUnionTypeTest do
              )
     end
 
-    deftype ProductCode4 :: (a -> b)
+    deftype ProductCode4 :: (binary -> integer)
 
     test "inline with function" do
       assert match?(
-               %TypeWriter.SingleCaseUnionType{name: :ProductCode4, type: {"(a -> b)", _}},
+               %TypeWriter.SingleCaseUnionType{
+                 name: :ProductCode4,
+                 type: {"(binary -> integer)", _}
+               },
                ProductCode4.__type__()
              )
     end

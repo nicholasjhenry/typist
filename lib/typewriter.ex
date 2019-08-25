@@ -142,9 +142,20 @@ defmodule TypeWriter do
             @enforce_keys [:value]
             defstruct [:value]
           end
+      end
 
-        _ ->
-          quote do: nil
+    spec =
+      case type do
+        %TypeWriter.SingleCaseUnionType{} = union_type ->
+          {_, ast} = union_type.type
+
+          quote do
+            @type t :: %__MODULE__{value: unquote(ast)}
+          end
+
+        %TypeWriter.DiscriminatedUnionType{} ->
+          quote do
+          end
       end
 
     if module_defined?(current_module, type.name) do
@@ -159,9 +170,14 @@ defmodule TypeWriter do
       quote do
         defmodule unquote(Module.concat([type.name])) do
           unquote(struct_defn)
+          unquote(spec)
 
           def __type__ do
             unquote(Macro.escape(type))
+          end
+
+          def __spec__ do
+            unquote(Macro.to_string(spec))
           end
         end
       end
