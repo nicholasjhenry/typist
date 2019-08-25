@@ -1,13 +1,15 @@
-defmodule TypeWriterTest do
+defmodule TypeWriter.TypeAstTest do
   use ExUnit.Case
 
   use TypeWriter
+
+  alias TypeWriter.TypeAst
 
   describe "get a type" do
     test "type wrapper for an aliased type" do
       ast = quote do: String.t()
 
-      result = TypeWriter.get_type(ast)
+      result = TypeAst.get_type(ast)
 
       assert result == {:String, :t, []}
     end
@@ -15,7 +17,7 @@ defmodule TypeWriterTest do
     test "type wrapper for a basic type" do
       ast = quote do: non_neg_integer
 
-      result = TypeWriter.get_type(ast)
+      result = TypeAst.get_type(ast)
 
       assert result == {:non_neg_integer, nil, []}
     end
@@ -23,7 +25,7 @@ defmodule TypeWriterTest do
     test "discrimate types with aliases returns the type" do
       ast = quote do: Nickname3.t() | FirstLast3.t() | FormatName3.t()
 
-      result = TypeWriter.get_type(ast)
+      result = TypeAst.get_type(ast)
 
       assert List.flatten(result) == [
                {:Nickname3, :t, []},
@@ -35,7 +37,7 @@ defmodule TypeWriterTest do
     test "discrimate types with basic" do
       ast = quote do: float() | integer() | binary()
 
-      result = TypeWriter.get_type(ast)
+      result = TypeAst.get_type(ast)
 
       assert List.flatten(result) == [
                {:float, nil, []},
@@ -47,7 +49,7 @@ defmodule TypeWriterTest do
     test "discrimate types with mixed" do
       ast = quote do: float() | String.t() | binary()
 
-      result = TypeWriter.get_type(ast)
+      result = TypeAst.get_type(ast)
 
       assert List.flatten(result) == [
                {:float, nil, []},
@@ -59,7 +61,7 @@ defmodule TypeWriterTest do
     test "product types with alias" do
       ast = quote do: {String.t(), String.t()}
 
-      result = TypeWriter.get_type(ast)
+      result = TypeAst.get_type(ast)
 
       assert result == {{:String, :t, []}, {:String, :t, []}}
     end
@@ -67,7 +69,7 @@ defmodule TypeWriterTest do
     test "product types with basic" do
       ast = quote do: {float(), integer()}
 
-      result = TypeWriter.get_type(ast)
+      result = TypeAst.get_type(ast)
 
       assert result == {{:float, nil, []}, {:integer, nil, []}}
     end
@@ -75,7 +77,7 @@ defmodule TypeWriterTest do
     test "product types with mixed" do
       ast = quote do: {String.t(), integer()}
 
-      result = TypeWriter.get_type(ast)
+      result = TypeAst.get_type(ast)
 
       assert result == {{:String, :t, []}, {:integer, nil, []}}
     end
@@ -83,7 +85,7 @@ defmodule TypeWriterTest do
     test "product types with discrimited unions" do
       ast = quote do: {String.t(), integer() | float()}
 
-      result = TypeWriter.get_type(ast)
+      result = TypeAst.get_type(ast)
 
       assert result == {{:String, :t, []}, [{:integer, nil, []}, {:float, nil, []}]}
     end
