@@ -11,6 +11,8 @@ defmodule TypeWriter.SingleUnionTypeTest do
                %TypeWriter.SingleCaseUnionType{name: :ProductCode1, type: {"String.t()", _}},
                ProductCode1.__type__()
              )
+
+      assert %ProductCode1{value: "ABC123"}
     end
 
     deftype ProductCode3 :: binary
@@ -42,6 +44,8 @@ defmodule TypeWriter.SingleUnionTypeTest do
                %TypeWriter.SingleCaseUnionType{name: :ProductCode2, type: {"String.t()", _}},
                ProductCode2.__type__()
              )
+
+      assert %ProductCode2{value: "ABC123"}
     end
   end
 end

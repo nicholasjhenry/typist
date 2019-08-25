@@ -111,8 +111,22 @@ defmodule TypeWriter do
     type = maybe_discriminated_union_type(current_module, ast, type)
     type = maybe_product_type(current_module, ast, type)
 
+    struct_defn =
+      case type do
+        %TypeWriter.SingleCaseUnionType{} ->
+          quote do
+            @enforce_keys [:value]
+            defstruct [:value]
+          end
+
+        _ ->
+          quote do: nil
+      end
+
     if module_defined?(current_module, type.name) do
       quote do
+        unquote(struct_defn)
+
         def __type__ do
           unquote(Macro.escape(type))
         end
@@ -120,6 +134,8 @@ defmodule TypeWriter do
     else
       quote do
         defmodule unquote(Module.concat([type.name])) do
+          unquote(struct_defn)
+
           def __type__ do
             unquote(Macro.escape(type))
           end
