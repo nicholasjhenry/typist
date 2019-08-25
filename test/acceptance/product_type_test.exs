@@ -6,6 +6,7 @@ defmodule TypeWriter.ProductTypeTest do
   describe "product type" do
     deftype FirstLast1 :: {String.t(), binary}
 
+    # NOTE: note using ProductType struct
     test "inline" do
       assert match?(
                %TypeWriter.SingleCaseUnionType{
@@ -14,6 +15,8 @@ defmodule TypeWriter.ProductTypeTest do
                },
                FirstLast1.__type__()
              )
+
+      assert %FirstLast1{value: {"Jane", "Doe"}}
     end
 
     defmodule FirstLast2 do
@@ -30,6 +33,8 @@ defmodule TypeWriter.ProductTypeTest do
                },
                FirstLast2.__type__()
              )
+
+      assert %FirstLast2{value: {"Jane", "Doe"}}
     end
   end
 end
