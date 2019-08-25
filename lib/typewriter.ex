@@ -6,7 +6,7 @@ defmodule TypeWriter do
   # Types:
   # -
 
-  import TypeWriter.TypeAst
+  import TypeWriter.TypeDefinition
 
   defmacro __using__(_opts) do
     quote do
@@ -67,7 +67,7 @@ defmodule TypeWriter do
             type_to_be_wrapped
           ]}
        ) do
-    type = get_type(type_to_be_wrapped)
+    type = from_ast(type_to_be_wrapped)
     %TypeWriter.Field{name: name, type: type}
   end
 
@@ -140,7 +140,7 @@ defmodule TypeWriter do
       ) do
     %TypeWriter.SingleCaseUnionType{
       name: module,
-      type: get_type(type_to_be_wrapped)
+      type: from_ast(type_to_be_wrapped)
     }
   end
 
@@ -156,7 +156,7 @@ defmodule TypeWriter do
       ) do
     %TypeWriter.SingleCaseUnionType{
       name: current_module,
-      type: get_type(type_to_be_wrapped)
+      type: from_ast(type_to_be_wrapped)
     }
   end
 
@@ -177,7 +177,7 @@ defmodule TypeWriter do
         {:|, _, union_types},
         _type
       ) do
-    types = union_types |> Enum.map(&get_type/1) |> List.flatten()
+    types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
     %TypeWriter.DiscriminatedUnionType{
       name: current_module,
@@ -195,7 +195,7 @@ defmodule TypeWriter do
          ]},
         :none
       ) do
-    types = union_types |> Enum.map(&get_type/1) |> List.flatten()
+    types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
     %TypeWriter.DiscriminatedUnionType{
       name: module,
@@ -216,7 +216,7 @@ defmodule TypeWriter do
          },
          :none
        ) do
-    type_info = get_type(product_types)
+    type_info = from_ast(product_types)
 
     %TypeWriter.SingleCaseUnionType{
       name: module,
@@ -231,7 +231,7 @@ defmodule TypeWriter do
   #   deftype {String.t(), String.t()}
   # end
   defp maybe_product_type(current_module, product_types, :none) do
-    type_info = get_type(product_types)
+    type_info = from_ast(product_types)
 
     %TypeWriter.SingleCaseUnionType{
       name: current_module,
