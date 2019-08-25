@@ -202,14 +202,6 @@ defmodule TypeWriter do
 
   def maybe_discriminated_union_type(_current_module, _ast, type), do: type
 
-  defp get_type({{:., _, [{:__aliases__, _, [type_name]}, type_function]}, _, []}) do
-    {type_name, type_function, []}
-  end
-
-  defp get_type({:|, _, union_types}) do
-    union_types |> Enum.map(&get_type/1)
-  end
-
   # Product type - inline
   # deftype FirstLast :: {String.t(), String.t()}
   defp maybe_product_type(
@@ -221,7 +213,7 @@ defmodule TypeWriter do
          },
          :none
        ) do
-    type_info = product_types |> Tuple.to_list() |> Enum.map(&get_type/1) |> List.to_tuple()
+    type_info = get_type(product_types)
 
     %TypeWriter.SingleCaseUnionType{
       name: module,
@@ -236,7 +228,7 @@ defmodule TypeWriter do
   #   deftype {String.t(), String.t()}
   # end
   defp maybe_product_type(current_module, product_types, :none) do
-    type_info = product_types |> Tuple.to_list() |> Enum.map(&get_type/1) |> List.to_tuple()
+    type_info = get_type(product_types)
 
     %TypeWriter.SingleCaseUnionType{
       name: current_module,
@@ -245,6 +237,30 @@ defmodule TypeWriter do
   end
 
   defp maybe_product_type(_current_module, _ast, type), do: type
+
+  # single types
+  def get_type({{:., _, [{:__aliases__, _, [type_name]}, type_function]}, _, []}) do
+    {type_name, type_function, []}
+  end
+
+  # union types
+  def get_type({:|, [], types}) do
+    Enum.map(types, &get_type/1)
+  end
+
+  # match basic types, e.g. binary, float, integer
+  def get_type({type, [], _}) do
+    {type, nil, []}
+  end
+
+  def get_type({:|, _, union_types}) do
+    union_types |> Enum.map(&get_type/1)
+  end
+
+  # product types
+  def get_type(product_types) do
+    product_types |> Tuple.to_list() |> Enum.map(&get_type/1) |> List.to_tuple()
+  end
 
   defp current_module(caller_module) do
     Module.split(caller_module) |> Enum.reverse() |> List.first() |> String.to_atom()
