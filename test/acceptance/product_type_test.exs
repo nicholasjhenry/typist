@@ -4,26 +4,32 @@ defmodule TypeWriter.ProductTypeTest do
   use TypeWriter
 
   describe "product type" do
-    deftype FirstLast1 :: {String.t(), String.t()}
+    deftype FirstLast1 :: {String.t(), binary}
 
     test "inline" do
-      assert FirstLast1.__type__() == %TypeWriter.SingleCaseUnionType{
-               name: :FirstLast1,
-               type: {{:String, :t, []}, {:String, :t, []}}
-             }
+      assert match?(
+               %TypeWriter.SingleCaseUnionType{
+                 name: :FirstLast1,
+                 type: {"{String.t(), binary}", _}
+               },
+               FirstLast1.__type__()
+             )
     end
 
     defmodule FirstLast2 do
       use TypeWriter
 
-      deftype {String.t(), String.t()}
+      deftype {String.t(), binary}
     end
 
     test "module" do
-      assert FirstLast2.__type__() == %TypeWriter.SingleCaseUnionType{
-               name: :FirstLast2,
-               type: {{:String, :t, []}, {:String, :t, []}}
-             }
+      assert match?(
+               %TypeWriter.SingleCaseUnionType{
+                 name: :FirstLast2,
+                 type: {"{String.t(), binary}", _}
+               },
+               FirstLast2.__type__()
+             )
     end
   end
 end

@@ -7,19 +7,28 @@ defmodule TypeWriter.SingleUnionTypeTest do
     deftype ProductCode1 :: String.t()
 
     test "inline with alias" do
-      assert ProductCode1.__type__() == %TypeWriter.SingleCaseUnionType{
-               name: :ProductCode1,
-               type: {:String, :t, []}
-             }
+      assert match?(
+               %TypeWriter.SingleCaseUnionType{name: :ProductCode1, type: {"String.t()", _}},
+               ProductCode1.__type__()
+             )
     end
 
     deftype ProductCode3 :: binary
 
     test "inline with basic" do
-      assert ProductCode3.__type__() == %TypeWriter.SingleCaseUnionType{
-               name: :ProductCode3,
-               type: {:binary, nil, []}
-             }
+      assert match?(
+               %TypeWriter.SingleCaseUnionType{name: :ProductCode3, type: {"binary", _}},
+               ProductCode3.__type__()
+             )
+    end
+
+    deftype ProductCode4 :: (a -> b)
+
+    test "inline with function" do
+      assert match?(
+               %TypeWriter.SingleCaseUnionType{name: :ProductCode4, type: {"(a -> b)", _}},
+               ProductCode4.__type__()
+             )
     end
 
     defmodule ProductCode2 do
@@ -29,10 +38,10 @@ defmodule TypeWriter.SingleUnionTypeTest do
     end
 
     test "module" do
-      assert ProductCode2.__type__() == %TypeWriter.SingleCaseUnionType{
-               name: :ProductCode2,
-               type: {:String, :t, []}
-             }
+      assert match?(
+               %TypeWriter.SingleCaseUnionType{name: :ProductCode2, type: {"String.t()", _}},
+               ProductCode2.__type__()
+             )
     end
   end
 end

@@ -7,13 +7,21 @@ defmodule TypeWriter.DiscriminatedUnionTest do
     deftype FormalName3 :: String.t()
     deftype Nickname3 :: String.t()
     deftype FirstLast3 :: {String.t(), String.t()}
-    deftype Name3 :: Nickname3.t() | FirstLast3.t() | FormatName3.t()
+    deftype Name3 :: Nickname3.t() | FirstLast3.t() | FormatName3.t() | binary
 
     test "inline" do
-      assert Name3.__type__() == %TypeWriter.DiscriminatedUnionType{
-               name: :Name3,
-               types: [{:Nickname3, :t, []}, {:FirstLast3, :t, []}, {:FormatName3, :t, []}]
-             }
+      assert match?(
+               %TypeWriter.DiscriminatedUnionType{
+                 name: :Name3,
+                 types: [
+                   {"Nickname3.t()", _},
+                   {"FirstLast3.t()", _},
+                   {"FormatName3.t()", _},
+                   {"binary", _}
+                 ]
+               },
+               Name3.__type__()
+             )
     end
 
     defmodule Name4 do
@@ -21,10 +29,13 @@ defmodule TypeWriter.DiscriminatedUnionTest do
     end
 
     test "module" do
-      assert Name4.__type__() == %TypeWriter.DiscriminatedUnionType{
-               name: :Name4,
-               types: [{:Nickname3, :t, []}, {:FirstLast3, :t, []}, {:FormatName3, :t, []}]
-             }
+      assert match?(
+               %TypeWriter.DiscriminatedUnionType{
+                 name: :Name4,
+                 types: [{"Nickname3.t()", _}, {"FirstLast3.t()", _}, {"FormatName3.t()", _}]
+               },
+               Name4.__type__()
+             )
     end
   end
 end

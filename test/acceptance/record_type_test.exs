@@ -10,13 +10,16 @@ defmodule TypeWriter.RecordTypeTest do
     end
 
     test "inline" do
-      assert Product1.__type__() == %TypeWriter.RecordType{
-               name: :Product1,
-               fields: [
-                 %TypeWriter.Field{name: :code, type: {:String, :t, []}},
-                 %TypeWriter.Field{name: :price, type: {:String, :t, []}}
-               ]
-             }
+      assert match?(
+               %TypeWriter.RecordType{
+                 name: :Product1,
+                 fields: [
+                   %TypeWriter.Field{name: :code, type: {"String.t()", _}},
+                   %TypeWriter.Field{name: :price, type: {"String.t()", _}}
+                 ]
+               },
+               Product1.__type__()
+             )
     end
 
     defmodule Product2 do
@@ -27,13 +30,16 @@ defmodule TypeWriter.RecordTypeTest do
     end
 
     test "module" do
-      assert Product2.__type__() == %TypeWriter.RecordType{
-               name: :Product2,
-               fields: [
-                 %TypeWriter.Field{name: :code, type: {:String, :t, []}},
-                 %TypeWriter.Field{name: :price, type: {:String, :t, []}}
-               ]
-             }
+      assert match?(
+               %TypeWriter.RecordType{
+                 name: :Product2,
+                 fields: [
+                   %TypeWriter.Field{name: :code, type: {"String.t()", _}},
+                   %TypeWriter.Field{name: :price, type: {"String.t()", _}}
+                 ]
+               },
+               Product2.__type__()
+             )
     end
   end
 end
