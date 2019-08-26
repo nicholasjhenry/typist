@@ -122,17 +122,43 @@ defmodule TypeWriter do
     defstruct [:name, :types]
   end
 
+  # Record type - module
+  # defmodule Product do
+  #   deftype do
+  #     code :: ProductCode.t()
+  #     price :: float()
+  #   end
+  # end
+  #
+  # matches: do, ... end
+  defmacro deftype(do: {:__block__, _, ast}) do
+    current_module = current_module(__CALLER__.module)
+    type = record_type(current_module, ast)
+    fields = Enum.map(type.fields, & &1.name)
+    spec = get_spec(type)
+
+    quote do
+      @enforce_keys unquote(fields)
+      defstruct unquote(fields)
+      @type t :: %__MODULE__{unquote_splicing(spec)}
+
+      def __type__ do
+        unquote(Macro.escape(type))
+      end
+    end
+  end
+
   # Record type - inline
   # deftype Product do
   #   code :: ProductCode.t()
   #   price :: float()
   # end
+  #
   # matches: deftype Product do, ... end
   defmacro deftype({:__aliases__, _, [_module]} = ast, do: block) do
     current_module = current_module(__CALLER__.module)
     type = record_type(current_module, ast, block)
     fields = Enum.map(type.fields, & &1.name)
-
     spec = get_spec(type)
 
     quote do
@@ -148,109 +174,11 @@ defmodule TypeWriter do
     end
   end
 
-  defp get_spec(type) do
-    case type do
-      %TypeWriter.RecordType{} = record_type ->
-        Enum.map(record_type.fields, fn field ->
-          field_name_ast = field.name
-          type_ast = elem(field.type, 1)
-
-          quote do
-            {unquote(field_name_ast), unquote(type_ast)}
-          end
-        end)
-
-      %TypeWriter.SingleCaseUnionType{} = union_type ->
-        {_, ast} = union_type.type
-
-        quote do
-          @type t :: %__MODULE__{value: unquote(ast)}
-        end
-
-      %TypeWriter.DiscriminatedUnionType{} ->
-        quote do
-        end
-    end
-  end
-
-  defp record_type(
-         _current_module,
-         {:__aliases__, _, [module]},
-         {:__block__, _, ast_fields}
-       ) do
-    fields = Enum.map(ast_fields, &build_field/1)
-
-    %TypeWriter.RecordType{
-      name: module,
-      fields: fields
-    }
-  end
-
-  defp build_field(
-         {:"::", _,
-          [
-            {name, _, nil},
-            type_to_be_wrapped
-          ]}
-       ) do
-    type = from_ast(type_to_be_wrapped)
-    %TypeWriter.Field{name: name, type: type}
-  end
-
-  # Record type - module
-  # defmodule Product do
-  #   deftype do
-  #     code :: ProductCode.t()
-  #     price :: float()
-  #   end
-  # end
-
-  defmacro deftype(do: {:__block__, _, ast_fields}) do
-    fields = Enum.map(ast_fields, &build_field/1)
-
-    type = %TypeWriter.RecordType{
-      name: :Product2,
-      fields: fields
-    }
-
-    fields = Enum.map(type.fields, & &1.name)
-
-    spec = get_spec(type)
-
-    quote do
-      @enforce_keys unquote(fields)
-      defstruct unquote(fields)
-      @type t :: %__MODULE__{unquote_splicing(spec)}
-
-      def __type__ do
-        unquote(Macro.escape(type))
-      end
-    end
-  end
-
-  # Non-record types
+  # Discriminated Unions and Product Types
   defmacro deftype(ast) do
     current_module = current_module(__CALLER__.module)
-
-    type = maybe_single_case_union_type(current_module, ast)
-    type = maybe_discriminated_union_type(current_module, ast, type)
-    type = maybe_product_type(current_module, ast, type)
-
-    struct_defn =
-      case type do
-        %TypeWriter.SingleCaseUnionType{} ->
-          quote do
-            @enforce_keys [:value]
-            defstruct [:value]
-          end
-
-        %TypeWriter.DiscriminatedUnionType{} ->
-          quote do
-            @enforce_keys [:value]
-            defstruct [:value]
-          end
-      end
-
+    type = get_type(current_module, ast)
+    struct_defn = get_struct_defn(type)
     spec = get_spec(type)
 
     if module_defined?(current_module, type.name) do
@@ -279,16 +207,89 @@ defmodule TypeWriter do
     end
   end
 
+  defp get_type(module, ast) do
+    type = maybe_single_case_union_type(module, ast)
+    type = maybe_discriminated_union_type(module, ast, type)
+    maybe_product_type(module, ast, type)
+  end
+
+  defp get_struct_defn(type) do
+    case type do
+      %TypeWriter.SingleCaseUnionType{} ->
+        quote do
+          @enforce_keys [:value]
+          defstruct [:value]
+        end
+
+      %TypeWriter.DiscriminatedUnionType{} ->
+        quote do
+          @enforce_keys [:value]
+          defstruct [:value]
+        end
+    end
+  end
+
+  defp get_spec(type) do
+    case type do
+      %TypeWriter.RecordType{} = record_type ->
+        Enum.map(record_type.fields, fn field ->
+          field_name_ast = field.name
+          type_ast = elem(field.type, 1)
+
+          quote do
+            {unquote(field_name_ast), unquote(type_ast)}
+          end
+        end)
+
+      %TypeWriter.SingleCaseUnionType{} = union_type ->
+        {_, ast} = union_type.type
+
+        quote do
+          @type t :: %__MODULE__{value: unquote(ast)}
+        end
+
+      %TypeWriter.DiscriminatedUnionType{} ->
+        quote do
+        end
+    end
+  end
+
+  # Build the Record type from module syntax
+  defp record_type(current_module, ast) do
+    fields = Enum.map(ast, &build_field/1)
+    %TypeWriter.RecordType{name: current_module, fields: fields}
+  end
+
+  # Build the Record type from inline syntax
+  defp record_type(
+         _current_module,
+         {:__aliases__, _, [module]},
+         {:__block__, _, ast}
+       ) do
+    record_type(module, ast)
+  end
+
+  defp build_field(
+         {:"::", _,
+          [
+            {name, _, nil},
+            type_to_be_wrapped
+          ]}
+       ) do
+    type = from_ast(type_to_be_wrapped)
+    %TypeWriter.Field{name: name, type: type}
+  end
+
   # Example: "Single case union type - inline"
   # deftype ProductCode1 :: String.t()
-  def maybe_single_case_union_type(
-        _current_module,
-        {
-          :"::",
-          _,
-          [{:__aliases__, _, [module]}, {{:., _, [_, _]}, _, []} = type_to_be_wrapped]
-        }
-      ) do
+  defp maybe_single_case_union_type(
+         _current_module,
+         {
+           :"::",
+           _,
+           [{:__aliases__, _, [module]}, {{:., _, [_, _]}, _, []} = type_to_be_wrapped]
+         }
+       ) do
     %TypeWriter.SingleCaseUnionType{
       name: module,
       type: from_ast(type_to_be_wrapped)
@@ -301,24 +302,24 @@ defmodule TypeWriter do
   #
   #   deftype String.t()
   # end
-  def maybe_single_case_union_type(
-        current_module,
-        {{:., _, [_, _]}, _, []} = type_to_be_wrapped
-      ) do
+  defp maybe_single_case_union_type(
+         current_module,
+         {{:., _, [_, _]}, _, []} = type_to_be_wrapped
+       ) do
     %TypeWriter.SingleCaseUnionType{
       name: current_module,
       type: from_ast(type_to_be_wrapped)
     }
   end
 
-  def maybe_single_case_union_type(_current_module, _ast), do: :none
+  defp maybe_single_case_union_type(_current_module, _ast), do: :none
 
   # module
-  def maybe_discriminated_union_type(
-        current_module,
-        {:|, _, union_types},
-        _type
-      ) do
+  defp maybe_discriminated_union_type(
+         current_module,
+         {:|, _, union_types},
+         _type
+       ) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
     %TypeWriter.DiscriminatedUnionType{
@@ -328,15 +329,15 @@ defmodule TypeWriter do
   end
 
   # inline
-  def maybe_discriminated_union_type(
-        _current_module,
-        {:"::", _,
-         [
-           {:__aliases__, _, [module]},
-           {:|, _, union_types}
-         ]},
-        :none
-      ) do
+  defp maybe_discriminated_union_type(
+         _current_module,
+         {:"::", _,
+          [
+            {:__aliases__, _, [module]},
+            {:|, _, union_types}
+          ]},
+         :none
+       ) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
     %TypeWriter.DiscriminatedUnionType{
@@ -345,7 +346,7 @@ defmodule TypeWriter do
     }
   end
 
-  def maybe_discriminated_union_type(_current_module, _ast, type), do: type
+  defp maybe_discriminated_union_type(_current_module, _ast, type), do: type
 
   # Product type - inline
   # deftype FirstLast :: {String.t(), String.t()}
