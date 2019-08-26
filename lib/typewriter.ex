@@ -104,6 +104,24 @@ defmodule TypeWriter do
     defstruct [:name, :type]
   end
 
+  defmodule SingleCaseUnionType do
+    @moduledoc """
+    Single case union type is used to wrap a primitive.
+
+    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
+    """
+    defstruct [:name, :type]
+  end
+
+  defmodule DiscriminatedUnionType do
+    @moduledoc """
+    Single case union type is used to wrap a primitive.
+
+    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
+    """
+    defstruct [:name, :types]
+  end
+
   # Record type - inline
   # deftype Product do
   #   code :: ProductCode.t()
@@ -115,18 +133,7 @@ defmodule TypeWriter do
     type = record_type(current_module, ast, block)
     fields = Enum.map(type.fields, & &1.name)
 
-    spec =
-      case type do
-        %TypeWriter.RecordType{} = record_type ->
-          Enum.map(record_type.fields, fn field ->
-            field_name_ast = field.name
-            type_ast = elem(field.type, 1)
-
-            quote do
-              {unquote(field_name_ast), unquote(type_ast)}
-            end
-          end)
-      end
+    spec = get_spec(type)
 
     quote do
       defmodule unquote(Module.concat([type.name])) do
@@ -138,6 +145,31 @@ defmodule TypeWriter do
           unquote(Macro.escape(type))
         end
       end
+    end
+  end
+
+  defp get_spec(type) do
+    case type do
+      %TypeWriter.RecordType{} = record_type ->
+        Enum.map(record_type.fields, fn field ->
+          field_name_ast = field.name
+          type_ast = elem(field.type, 1)
+
+          quote do
+            {unquote(field_name_ast), unquote(type_ast)}
+          end
+        end)
+
+      %TypeWriter.SingleCaseUnionType{} = union_type ->
+        {_, ast} = union_type.type
+
+        quote do
+          @type t :: %__MODULE__{value: unquote(ast)}
+        end
+
+      %TypeWriter.DiscriminatedUnionType{} ->
+        quote do
+        end
     end
   end
 
@@ -183,18 +215,7 @@ defmodule TypeWriter do
 
     fields = Enum.map(type.fields, & &1.name)
 
-    spec =
-      case type do
-        %TypeWriter.RecordType{} = record_type ->
-          Enum.map(record_type.fields, fn field ->
-            field_name_ast = field.name
-            type_ast = elem(field.type, 1)
-
-            quote do
-              {unquote(field_name_ast), unquote(type_ast)}
-            end
-          end)
-      end
+    spec = get_spec(type)
 
     quote do
       @enforce_keys unquote(fields)
@@ -205,24 +226,6 @@ defmodule TypeWriter do
         unquote(Macro.escape(type))
       end
     end
-  end
-
-  defmodule SingleCaseUnionType do
-    @moduledoc """
-    Single case union type is used to wrap a primitive.
-
-    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
-    """
-    defstruct [:name, :type]
-  end
-
-  defmodule DiscriminatedUnionType do
-    @moduledoc """
-    Single case union type is used to wrap a primitive.
-
-    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
-    """
-    defstruct [:name, :types]
   end
 
   # Non-record types
@@ -248,19 +251,7 @@ defmodule TypeWriter do
           end
       end
 
-    spec =
-      case type do
-        %TypeWriter.SingleCaseUnionType{} = union_type ->
-          {_, ast} = union_type.type
-
-          quote do
-            @type t :: %__MODULE__{value: unquote(ast)}
-          end
-
-        %TypeWriter.DiscriminatedUnionType{} ->
-          quote do
-          end
-      end
+    spec = get_spec(type)
 
     if module_defined?(current_module, type.name) do
       quote do
