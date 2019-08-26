@@ -115,10 +115,24 @@ defmodule TypeWriter do
     type = record_type(current_module, ast, block)
     fields = Enum.map(type.fields, & &1.name)
 
+    spec =
+      case type do
+        %TypeWriter.RecordType{} = record_type ->
+          Enum.map(record_type.fields, fn field ->
+            field_name_ast = field.name
+            type_ast = elem(field.type, 1)
+
+            quote do
+              {unquote(field_name_ast), unquote(type_ast)}
+            end
+          end)
+      end
+
     quote do
       defmodule unquote(Module.concat([type.name])) do
         @enforce_keys unquote(fields)
         defstruct unquote(fields)
+        @type t :: %__MODULE__{unquote_splicing(spec)}
 
         def __type__ do
           unquote(Macro.escape(type))
@@ -169,9 +183,23 @@ defmodule TypeWriter do
 
     fields = Enum.map(type.fields, & &1.name)
 
+    spec =
+      case type do
+        %TypeWriter.RecordType{} = record_type ->
+          Enum.map(record_type.fields, fn field ->
+            field_name_ast = field.name
+            type_ast = elem(field.type, 1)
+
+            quote do
+              {unquote(field_name_ast), unquote(type_ast)}
+            end
+          end)
+      end
+
     quote do
       @enforce_keys unquote(fields)
       defstruct unquote(fields)
+      @type t :: %__MODULE__{unquote_splicing(spec)}
 
       def __type__ do
         unquote(Macro.escape(type))
