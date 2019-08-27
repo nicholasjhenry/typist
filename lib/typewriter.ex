@@ -113,12 +113,15 @@ defmodule TypeWriter do
     defstruct [:name, :type]
   end
 
-  defmodule DiscriminatedUnionType do
-    @moduledoc """
-    Single case union type is used to wrap a primitive.
+  defmodule ProductType do
+    @moduledoc false
 
-    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
-    """
+    defstruct [:name, :type]
+  end
+
+  defmodule DiscriminatedUnionType do
+    @moduledoc false
+
     defstruct [:name, :types]
   end
 
@@ -221,6 +224,12 @@ defmodule TypeWriter do
           defstruct [:value]
         end
 
+      %TypeWriter.ProductType{} ->
+        quote do
+          @enforce_keys [:value]
+          defstruct [:value]
+        end
+
       %TypeWriter.DiscriminatedUnionType{} ->
         quote do
           @enforce_keys [:value]
@@ -243,6 +252,13 @@ defmodule TypeWriter do
 
       %TypeWriter.SingleCaseUnionType{} = union_type ->
         {_, ast} = union_type.type
+
+        quote do
+          @type t :: %__MODULE__{value: unquote(ast)}
+        end
+
+      %TypeWriter.ProductType{} = product_type ->
+        {_, ast} = product_type.type
 
         quote do
           @type t :: %__MODULE__{value: unquote(ast)}
@@ -287,7 +303,7 @@ defmodule TypeWriter do
          {
            :"::",
            _,
-           [{:__aliases__, _, [module]}, {{:., _, [_, _]}, _, []} = type_to_be_wrapped]
+           [{:__aliases__, _, [module]}, {{:., _, [_, _]}, _, _} = type_to_be_wrapped]
          }
        ) do
     %TypeWriter.SingleCaseUnionType{
@@ -296,7 +312,7 @@ defmodule TypeWriter do
     }
   end
 
-  # Example: "Single case union type - module"
+  # Example: "Single case union type - module, alias type"
   # defmodule ProductCode2 do
   #   use TypeWriter
   #
@@ -312,7 +328,53 @@ defmodule TypeWriter do
     }
   end
 
+  # Example: "Single case union type - module, basic type"
+  # defmodule ProductCode2 do
+  #   use TypeWriter
+  #
+  #   deftype binary
+  # end
+  defp maybe_single_case_union_type(
+         _current_module,
+         {:"::", _,
+          [
+            {:__aliases__, _, [module]},
+            {_basic_type, _, nil} = type_to_be_wrapped
+          ]}
+       ) do
+    %TypeWriter.SingleCaseUnionType{
+      name: module,
+      type: from_ast(type_to_be_wrapped)
+    }
+  end
+
+  # Example: "Single case union type - module, basic type, multi-line AST"
+  # This can occur with a basic type such as a function
+  # defmodule ProductCode2 do
+  #   use TypeWriter
+  #
+  #   deftype binary
+  # end
+
+  defp maybe_single_case_union_type(
+         _current_module,
+         {:"::", _,
+          [
+            {:__aliases__, _, [module]},
+            [_] = type_to_be_wrapped
+          ]}
+       ) do
+    %TypeWriter.SingleCaseUnionType{
+      name: module,
+      type: from_ast(type_to_be_wrapped)
+    }
+  end
+
   defp maybe_single_case_union_type(_current_module, _ast), do: :none
+  # defp maybe_single_case_union_type(current_module, ast) do
+  #   IO.inspect(ast, label: current_module)
+  #   :none
+  # end
 
   # module
   defp maybe_discriminated_union_type(
@@ -361,7 +423,7 @@ defmodule TypeWriter do
        ) do
     type_info = from_ast(product_types)
 
-    %TypeWriter.SingleCaseUnionType{
+    %TypeWriter.ProductType{
       name: module,
       type: type_info
     }
@@ -376,7 +438,7 @@ defmodule TypeWriter do
   defp maybe_product_type(current_module, product_types, :none) do
     type_info = from_ast(product_types)
 
-    %TypeWriter.SingleCaseUnionType{
+    %TypeWriter.ProductType{
       name: current_module,
       type: type_info
     }

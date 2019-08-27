@@ -9,7 +9,7 @@ defmodule TypeWriter.ProductTypeTest do
     # NOTE: note using ProductType struct
     test "inline" do
       assert match?(
-               %TypeWriter.SingleCaseUnionType{
+               %TypeWriter.ProductType{
                  name: :FirstLast1,
                  type: {"{String.t(), binary}", _}
                },
@@ -27,7 +27,7 @@ defmodule TypeWriter.ProductTypeTest do
 
     test "module" do
       assert match?(
-               %TypeWriter.SingleCaseUnionType{
+               %TypeWriter.ProductType{
                  name: :FirstLast2,
                  type: {"{String.t(), binary}", _}
                },
