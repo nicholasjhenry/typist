@@ -16,16 +16,16 @@ defmodule TypeWriter do
   See: [Designing with types: Single case union types](https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/)
 
       iex> use TypeWriter
-      ...> module = deftype ProductCode :: String.t
-      ...> match?({:module, ProductCode, _, _}, module)
-      true
+      ...> deftype ProductCodeA :: String.t
+      ...> TypewriterTest.ProductCodeA.__info__(:module)
+      TypewriterTest.ProductCodeA
 
-      iex> module = defmodule ProductCode do
+      iex> defmodule ProductCodeB do
       ...>   use TypeWriter
-      ...>   deftype ProductCode :: String.t
+      ...>   deftype String.t
       ...> end
-      ...> match?({:module, ProductCode, _, _}, module)
-      true
+      ...> TypewriterTest.ProductCodeB.__info__(:module)
+      TypewriterTest.ProductCodeB
 
   Both examples generate the following code:
 
@@ -40,9 +40,9 @@ defmodule TypeWriter do
   iex> use TypeWriter
   ...> deftype Nickname :: String.t
   ...> deftype FirstLast :: {String.t, String.t}
-  ...> module = deftype Name :: Nickname.t | FirstLast.t
-  ...> match?({:module, Name, _, _}, module)
-  true
+  ...> deftype Name :: Nickname.t | FirstLast.t
+  ...> TypewriterTest.Name.__info__(:module)
+  TypewriterTest.Name
 
   Example translate to:
 
@@ -55,22 +55,22 @@ defmodule TypeWriter do
   ## Record Type
 
       iex> use TypeWriter
-      ...> module = deftype Product do
+      ...> deftype ProductA do
       ...>   code :: ProductCode.t()
       ...>   price :: float()
       ...> end
-      ...> match?({:module, Product, _, _}, module)
-      true
+      ...> TypewriterTest.ProductA.__info__(:module)
+      TypewriterTest.ProductA
 
-      iex> module = defmodule Product do
+      iex> defmodule ProductB do
       ...>   use TypeWriter
       ...>   deftype do
       ...>     code :: ProductCode.t()
       ...>     price :: integer()
       ...>   end
       ...> end
-      ...> match?({:module, Product, _, _}, module)
-      true
+      ...> TypewriterTest.ProductB.__info__(:module)
+      TypewriterTest.ProductB
 
   Both examples generate the following code:
 
@@ -165,7 +165,7 @@ defmodule TypeWriter do
     spec = get_spec(type)
 
     quote do
-      defmodule unquote(Module.concat([type.name])) do
+      defmodule unquote(Module.concat([__CALLER__.module, type.name])) do
         @enforce_keys unquote(fields)
         defstruct unquote(fields)
         @type t :: %__MODULE__{unquote_splicing(spec)}
@@ -194,7 +194,7 @@ defmodule TypeWriter do
       end
     else
       quote do
-        defmodule unquote(Module.concat([type.name])) do
+        defmodule unquote(Module.concat([__CALLER__.module, type.name])) do
           unquote(struct_defn)
           unquote(spec)
 

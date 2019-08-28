@@ -1,7 +1,13 @@
 defmodule TypeWriter.SingleCaseUnionTypeTest do
   use ExUnit.Case
-
   use TypeWriter
+
+  alias TypeWriter.SingleCaseUnionTypeTest.{
+    ProductCode1,
+    ProductCode2,
+    ProductCode3,
+    ProductCode4
+  }
 
   describe "single case union type" do
     deftype ProductCode1 :: String.t()

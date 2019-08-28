@@ -1,12 +1,14 @@
 defmodule TypeWriter.DiscriminatedUnionTest do
   use ExUnit.Case
-
   use TypeWriter
+
+  alias TypeWriter.DiscriminatedUnionTest.{Nickname3, Name3}
 
   describe "discriminated union" do
     deftype FormalName3 :: String.t()
     deftype Nickname3 :: String.t()
     deftype FirstLast3 :: {String.t(), String.t()}
+
     deftype Name3 :: Nickname3.t() | FirstLast3.t() | FormatName3.t() | binary
 
     test "inline" do

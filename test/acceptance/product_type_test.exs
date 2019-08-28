@@ -1,7 +1,8 @@
 defmodule TypeWriter.ProductTypeTest do
   use ExUnit.Case
-
   use TypeWriter
+
+  alias TypeWriter.ProductTypeTest.FirstLast1
 
   describe "product type" do
     deftype FirstLast1 :: {String.t(), binary}

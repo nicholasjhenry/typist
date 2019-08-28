@@ -1,7 +1,8 @@
 defmodule TypeWriter.RecordTypeTest do
   use ExUnit.Case
-
   use TypeWriter
+
+  alias TypeWriter.RecordTypeTest.Product1
 
   describe "record type" do
     deftype Product1 do
