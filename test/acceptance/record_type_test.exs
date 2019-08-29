@@ -1,8 +1,8 @@
-defmodule TypeWriter.RecordTypeTest do
+defmodule Typist.RecordTypeTest do
   use ExUnit.Case
-  use TypeWriter
+  use Typist
 
-  alias TypeWriter.RecordTypeTest.Product1
+  alias Typist.RecordTypeTest.Product1
 
   describe "record type" do
     deftype Product1 do
@@ -12,11 +12,11 @@ defmodule TypeWriter.RecordTypeTest do
 
     test "inline" do
       assert match?(
-               %TypeWriter.RecordType{
+               %Typist.RecordType{
                  name: :Product1,
                  fields: [
-                   %TypeWriter.Field{name: :code, type: {"String.t()", _}},
-                   %TypeWriter.Field{name: :price, type: {"integer", _}}
+                   %Typist.Field{name: :code, type: {"String.t()", _}},
+                   %Typist.Field{name: :price, type: {"integer", _}}
                  ]
                },
                Product1.__type__()
@@ -34,11 +34,11 @@ defmodule TypeWriter.RecordTypeTest do
 
     test "module" do
       assert match?(
-               %TypeWriter.RecordType{
+               %Typist.RecordType{
                  name: :Product2,
                  fields: [
-                   %TypeWriter.Field{name: :code, type: {"String.t()", _}},
-                   %TypeWriter.Field{name: :price, type: {"integer", _}}
+                   %Typist.Field{name: :code, type: {"String.t()", _}},
+                   %Typist.Field{name: :price, type: {"integer", _}}
                  ]
                },
                Product2.__type__()

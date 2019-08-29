@@ -1,8 +1,8 @@
-defmodule TypeWriter.SingleCaseUnionTypeTest do
+defmodule Typist.SingleCaseUnionTypeTest do
   use ExUnit.Case
-  use TypeWriter
+  use Typist
 
-  alias TypeWriter.SingleCaseUnionTypeTest.{
+  alias Typist.SingleCaseUnionTypeTest.{
     ProductCode1,
     ProductCode2,
     ProductCode3,
@@ -14,7 +14,7 @@ defmodule TypeWriter.SingleCaseUnionTypeTest do
 
     test "inline with alias" do
       assert match?(
-               %TypeWriter.SingleCaseUnionType{name: :ProductCode1, type: {"String.t()", _}},
+               %Typist.SingleCaseUnionType{name: :ProductCode1, type: {"String.t()", _}},
                ProductCode1.__type__()
              )
 
@@ -27,7 +27,7 @@ defmodule TypeWriter.SingleCaseUnionTypeTest do
 
     test "inline with basic" do
       assert match?(
-               %TypeWriter.SingleCaseUnionType{name: :ProductCode3, type: {"binary", _}},
+               %Typist.SingleCaseUnionType{name: :ProductCode3, type: {"binary", _}},
                ProductCode3.__type__()
              )
     end
@@ -36,7 +36,7 @@ defmodule TypeWriter.SingleCaseUnionTypeTest do
 
     test "inline with function" do
       assert match?(
-               %TypeWriter.SingleCaseUnionType{
+               %Typist.SingleCaseUnionType{
                  name: :ProductCode4,
                  type: {"(binary -> integer)", _}
                },
@@ -45,14 +45,14 @@ defmodule TypeWriter.SingleCaseUnionTypeTest do
     end
 
     defmodule ProductCode2 do
-      use TypeWriter
+      use Typist
 
       deftype String.t()
     end
 
     test "module" do
       assert match?(
-               %TypeWriter.SingleCaseUnionType{name: :ProductCode2, type: {"String.t()", _}},
+               %Typist.SingleCaseUnionType{name: :ProductCode2, type: {"String.t()", _}},
                ProductCode2.__type__()
              )
 

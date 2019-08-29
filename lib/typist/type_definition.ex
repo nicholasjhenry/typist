@@ -1,4 +1,4 @@
-defmodule TypeWriter.TypeDefinition do
+defmodule Typist.TypeDefinition do
   @doc """
   Returns the type definition from the AST.
   """

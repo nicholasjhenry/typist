@@ -1,4 +1,4 @@
-# Typewriter
+# Typist
 
 ## About this library
 

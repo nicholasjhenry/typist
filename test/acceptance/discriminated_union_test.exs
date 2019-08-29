@@ -1,8 +1,8 @@
-defmodule TypeWriter.DiscriminatedUnionTest do
+defmodule Typist.DiscriminatedUnionTest do
   use ExUnit.Case
-  use TypeWriter
+  use Typist
 
-  alias TypeWriter.DiscriminatedUnionTest.{Nickname3, Name3}
+  alias Typist.DiscriminatedUnionTest.{Nickname3, Name3}
 
   describe "discriminated union" do
     deftype FormalName3 :: String.t()
@@ -13,7 +13,7 @@ defmodule TypeWriter.DiscriminatedUnionTest do
 
     test "inline" do
       assert match?(
-               %TypeWriter.DiscriminatedUnionType{
+               %Typist.DiscriminatedUnionType{
                  name: :Name3,
                  types: [
                    {"Nickname3.t()", _},
@@ -34,7 +34,7 @@ defmodule TypeWriter.DiscriminatedUnionTest do
 
     test "module" do
       assert match?(
-               %TypeWriter.DiscriminatedUnionType{
+               %Typist.DiscriminatedUnionType{
                  name: :Name4,
                  types: [{"Nickname3.t()", _}, {"FirstLast3.t()", _}, {"FormatName3.t()", _}]
                },

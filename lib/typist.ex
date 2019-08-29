@@ -1,4 +1,4 @@
-defmodule TypeWriter do
+defmodule Typist do
   @moduledoc """
   A DSL to define types inspired by libraries such as TypedStruct, Algae and the F# language.
 
@@ -16,7 +16,7 @@ defmodule TypeWriter do
   See: [Designing with types: Single case union types](https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/)
 
       iex> defmodule Example1 do
-      ...>   use TypeWriter
+      ...>   use Typist
       ...>   deftype ProductCode :: String.t
       ...>   def product_code(value) do
       ...>     %Example1.ProductCode{value: value}
@@ -27,7 +27,7 @@ defmodule TypeWriter do
       true
 
       iex> defmodule ProductCode do
-      ...>   use TypeWriter
+      ...>   use Typist
       ...>   deftype String.t
       ...>   def new(value) do
       ...>     %__MODULE__{value: value}
@@ -48,7 +48,7 @@ defmodule TypeWriter do
   ## Discriminated Union
 
   iex> defmodule Example2 do
-  ...>   use TypeWriter
+  ...>   use Typist
   ...>   deftype Nickname :: String.t
   ...>   deftype FirstLast :: {String.t, String.t}
   ...>   deftype Name :: Nickname.t | FirstLast.t
@@ -74,7 +74,7 @@ defmodule TypeWriter do
   ## Record Type
 
       iex> defmodule Example3 do
-      ...>   use TypeWriter
+      ...>   use Typist
       ...>   deftype ProductCode :: String.t
       ...>   deftype Product do
       ...>     code :: ProductCode.t()
@@ -92,7 +92,7 @@ defmodule TypeWriter do
       true
 
       iex> defmodule Product do
-      ...>   use TypeWriter
+      ...>   use Typist
       ...>   deftype ProductCode :: String.t
       ...>   deftype do
       ...>     code :: ProductCode.t()
@@ -119,11 +119,11 @@ defmodule TypeWriter do
       end
   """
 
-  import TypeWriter.TypeDefinition
+  import Typist.TypeDefinition
 
   defmacro __using__(_opts) do
     quote do
-      import TypeWriter
+      import Typist
     end
   end
 
@@ -255,19 +255,19 @@ defmodule TypeWriter do
 
   defp get_struct_defn(type) do
     case type do
-      %TypeWriter.SingleCaseUnionType{} ->
+      %Typist.SingleCaseUnionType{} ->
         quote do
           @enforce_keys [:value]
           defstruct [:value]
         end
 
-      %TypeWriter.ProductType{} ->
+      %Typist.ProductType{} ->
         quote do
           @enforce_keys [:value]
           defstruct [:value]
         end
 
-      %TypeWriter.DiscriminatedUnionType{} ->
+      %Typist.DiscriminatedUnionType{} ->
         quote do
           @enforce_keys [:value]
           defstruct [:value]
@@ -277,7 +277,7 @@ defmodule TypeWriter do
 
   defp get_spec(type) do
     case type do
-      %TypeWriter.RecordType{} = record_type ->
+      %Typist.RecordType{} = record_type ->
         Enum.map(record_type.fields, fn field ->
           field_name_ast = field.name
           type_ast = elem(field.type, 1)
@@ -287,21 +287,21 @@ defmodule TypeWriter do
           end
         end)
 
-      %TypeWriter.SingleCaseUnionType{} = union_type ->
+      %Typist.SingleCaseUnionType{} = union_type ->
         {_, ast} = union_type.type
 
         quote do
           @type t :: %__MODULE__{value: unquote(ast)}
         end
 
-      %TypeWriter.ProductType{} = product_type ->
+      %Typist.ProductType{} = product_type ->
         {_, ast} = product_type.type
 
         quote do
           @type t :: %__MODULE__{value: unquote(ast)}
         end
 
-      %TypeWriter.DiscriminatedUnionType{} ->
+      %Typist.DiscriminatedUnionType{} ->
         quote do
         end
     end
@@ -310,7 +310,7 @@ defmodule TypeWriter do
   # Build the Record type from module syntax
   defp record_type(current_module, ast) do
     fields = Enum.map(ast, &build_field/1)
-    %TypeWriter.RecordType{name: current_module, fields: fields}
+    %Typist.RecordType{name: current_module, fields: fields}
   end
 
   # Build the Record type from inline syntax
@@ -330,7 +330,7 @@ defmodule TypeWriter do
           ]}
        ) do
     type = from_ast(type_to_be_wrapped)
-    %TypeWriter.Field{name: name, type: type}
+    %Typist.Field{name: name, type: type}
   end
 
   # Example: "Single case union type - inline"
@@ -343,7 +343,7 @@ defmodule TypeWriter do
            [{:__aliases__, _, [module]}, {{:., _, [_, _]}, _, _} = type_to_be_wrapped]
          }
        ) do
-    %TypeWriter.SingleCaseUnionType{
+    %Typist.SingleCaseUnionType{
       name: module,
       type: from_ast(type_to_be_wrapped)
     }
@@ -351,7 +351,7 @@ defmodule TypeWriter do
 
   # Example: "Single case union type - module, alias type"
   # defmodule ProductCode2 do
-  #   use TypeWriter
+  #   use Typist
   #
   #   deftype String.t()
   # end
@@ -359,7 +359,7 @@ defmodule TypeWriter do
          current_module,
          {{:., _, [_, _]}, _, []} = type_to_be_wrapped
        ) do
-    %TypeWriter.SingleCaseUnionType{
+    %Typist.SingleCaseUnionType{
       name: current_module,
       type: from_ast(type_to_be_wrapped)
     }
@@ -367,7 +367,7 @@ defmodule TypeWriter do
 
   # Example: "Single case union type - module, basic type"
   # defmodule ProductCode2 do
-  #   use TypeWriter
+  #   use Typist
   #
   #   deftype binary
   # end
@@ -379,7 +379,7 @@ defmodule TypeWriter do
             {_basic_type, _, nil} = type_to_be_wrapped
           ]}
        ) do
-    %TypeWriter.SingleCaseUnionType{
+    %Typist.SingleCaseUnionType{
       name: module,
       type: from_ast(type_to_be_wrapped)
     }
@@ -388,7 +388,7 @@ defmodule TypeWriter do
   # Example: "Single case union type - module, basic type, multi-line AST"
   # This can occur with a basic type such as a function
   # defmodule ProductCode2 do
-  #   use TypeWriter
+  #   use Typist
   #
   #   deftype binary
   # end
@@ -401,7 +401,7 @@ defmodule TypeWriter do
             [_] = type_to_be_wrapped
           ]}
        ) do
-    %TypeWriter.SingleCaseUnionType{
+    %Typist.SingleCaseUnionType{
       name: module,
       type: from_ast(type_to_be_wrapped)
     }
@@ -421,7 +421,7 @@ defmodule TypeWriter do
        ) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
-    %TypeWriter.DiscriminatedUnionType{
+    %Typist.DiscriminatedUnionType{
       name: current_module,
       types: types
     }
@@ -439,7 +439,7 @@ defmodule TypeWriter do
        ) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
-    %TypeWriter.DiscriminatedUnionType{
+    %Typist.DiscriminatedUnionType{
       name: module,
       types: types
     }
@@ -460,7 +460,7 @@ defmodule TypeWriter do
        ) do
     type_info = from_ast(product_types)
 
-    %TypeWriter.ProductType{
+    %Typist.ProductType{
       name: module,
       type: type_info
     }
@@ -468,14 +468,14 @@ defmodule TypeWriter do
 
   # Product type - module
   # defmodule FirstLast2 do
-  #   use TypeWriter
+  #   use Typist
   #
   #   deftype {String.t(), String.t()}
   # end
   defp maybe_product_type(current_module, product_types, :none) do
     type_info = from_ast(product_types)
 
-    %TypeWriter.ProductType{
+    %Typist.ProductType{
       name: current_module,
       type: type_info
     }

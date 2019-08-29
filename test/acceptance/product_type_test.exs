@@ -1,8 +1,8 @@
-defmodule TypeWriter.ProductTypeTest do
+defmodule Typist.ProductTypeTest do
   use ExUnit.Case
-  use TypeWriter
+  use Typist
 
-  alias TypeWriter.ProductTypeTest.FirstLast1
+  alias Typist.ProductTypeTest.FirstLast1
 
   describe "product type" do
     deftype FirstLast1 :: {String.t(), binary}
@@ -10,7 +10,7 @@ defmodule TypeWriter.ProductTypeTest do
     # NOTE: note using ProductType struct
     test "inline" do
       assert match?(
-               %TypeWriter.ProductType{
+               %Typist.ProductType{
                  name: :FirstLast1,
                  type: {"{String.t(), binary}", _}
                },
@@ -21,14 +21,14 @@ defmodule TypeWriter.ProductTypeTest do
     end
 
     defmodule FirstLast2 do
-      use TypeWriter
+      use Typist
 
       deftype {String.t(), binary}
     end
 
     test "module" do
       assert match?(
-               %TypeWriter.ProductType{
+               %Typist.ProductType{
                  name: :FirstLast2,
                  type: {"{String.t(), binary}", _}
                },
