@@ -11,6 +11,53 @@ defmodule Typist do
 
   * [Designing with Types Series](https://fsharpforfunandprofit.com/posts/designing-with-types-intro/)
 
+  ## Why typist?
+
+  Compared to other libraries, Typist is designed to be terse and optimized for wrapping a
+  single Elixir primitive creating a domain specific primitive, also known as a Value Object
+  in Domain-Driven Design.
+
+  ```elixir
+  # Typist
+  defmodule Product do
+    use TypeWriter
+
+    deftype Code :: String.t
+    deftype Price :: Decimal.t
+
+    deftype do
+      code :: Product.Code.t
+      price :: Product.Price.t
+    end
+  end
+
+  # TypedStruct
+  defmodule Product do
+    defmodule Code do
+      use TypedStruct
+
+      typedstruct enforce_keys: true do
+        field :value, String.t
+      end
+    end
+
+    defmodule Price do
+      use TypedStruct
+
+      typedstruct enforce_keys: true do
+        field :value, Decimal.t
+      end
+    end
+
+    use TypedStruct
+
+    typedstruct do
+      field :code, Code.t
+      field :price, Price.t
+    end
+  end
+  ```
+
   ## Single Case Union Type
 
   See: [Designing with types: Single case union types](https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/)
