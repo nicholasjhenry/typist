@@ -15,17 +15,27 @@ defmodule TypeWriter do
 
   See: [Designing with types: Single case union types](https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/)
 
-      iex> use TypeWriter
-      ...> deftype ProductCodeA :: String.t
-      ...> TypewriterTest.ProductCodeA.__info__(:module)
-      TypewriterTest.ProductCodeA
+      iex> defmodule Example1 do
+      ...>   use TypeWriter
+      ...>   deftype ProductCode :: String.t
+      ...>   def product_code(value) do
+      ...>     %Example1.ProductCode{value: value}
+      ...>   end
+      ...> end
+      ...> product_code = Example1.product_code("ABC")
+      ...> product_code.value == "ABC"
+      true
 
-      iex> defmodule ProductCodeB do
+      iex> defmodule ProductCode do
       ...>   use TypeWriter
       ...>   deftype String.t
+      ...>   def new(value) do
+      ...>     %__MODULE__{value: value}
+      ...>   end
       ...> end
-      ...> TypewriterTest.ProductCodeB.__info__(:module)
-      TypewriterTest.ProductCodeB
+      ...> product_code = ProductCode.new("ABC")
+      ...> product_code.value == "ABC"
+      true
 
   Both examples generate the following code:
 
@@ -37,12 +47,21 @@ defmodule TypeWriter do
 
   ## Discriminated Union
 
-  iex> use TypeWriter
-  ...> deftype Nickname :: String.t
-  ...> deftype FirstLast :: {String.t, String.t}
-  ...> deftype Name :: Nickname.t | FirstLast.t
-  ...> TypewriterTest.Name.__info__(:module)
-  TypewriterTest.Name
+  iex> defmodule Example2 do
+  ...>   use TypeWriter
+  ...>   deftype Nickname :: String.t
+  ...>   deftype FirstLast :: {String.t, String.t}
+  ...>   deftype Name :: Nickname.t | FirstLast.t
+  ...>   def first_last(first, last) do
+  ...>     %Example2.FirstLast{value: {first, last}}
+  ...>   end
+  ...>   def name(value) do
+  ...>     %Example2.Name{value: value}
+  ...>   end
+  ...> end
+  ...> name = Example2.first_last("Steve", "Jobs") |> Example2.name
+  ...> {"Steve", "Jobs"} == name.value.value
+  true
 
   Example translate to:
 
@@ -54,23 +73,41 @@ defmodule TypeWriter do
 
   ## Record Type
 
-      iex> use TypeWriter
-      ...> deftype ProductA do
-      ...>   code :: ProductCode.t()
-      ...>   price :: float()
-      ...> end
-      ...> TypewriterTest.ProductA.__info__(:module)
-      TypewriterTest.ProductA
-
-      iex> defmodule ProductB do
+      iex> defmodule Example3 do
       ...>   use TypeWriter
+      ...>   deftype ProductCode :: String.t
+      ...>   deftype Product do
+      ...>     code :: ProductCode.t()
+      ...>     price :: integer()
+      ...>   end
+      ...>   def product_code(value) do
+      ...>     %Example3.ProductCode{value: value}
+      ...>   end
+      ...>   def product(product_code, price) do
+      ...>     %Example3.Product{code: product_code, price: price}
+      ...>   end
+      ...> end
+      ...> product = Example3.product_code("ABC") |> Example3.product(10_00)
+      ...> match?(%{code: %{value: "ABC"}, price: 10_00}, product)
+      true
+
+      iex> defmodule Product do
+      ...>   use TypeWriter
+      ...>   deftype ProductCode :: String.t
       ...>   deftype do
       ...>     code :: ProductCode.t()
       ...>     price :: integer()
       ...>   end
+      ...>   def product_code(value) do
+      ...>     %Product.ProductCode{value: value}
+      ...>   end
+      ...>   def new(product_code, price) do
+      ...>     %Product{code: product_code, price: price}
+      ...>   end
       ...> end
-      ...> TypewriterTest.ProductB.__info__(:module)
-      TypewriterTest.ProductB
+      ...> product = Product.product_code("ABC") |> Product.new(10_00)
+      ...> match?(%{code: %{value: "ABC"}, price: 10_00}, product)
+      true
 
   Both examples generate the following code:
 
