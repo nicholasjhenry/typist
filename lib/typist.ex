@@ -119,8 +119,6 @@ defmodule Typist do
       end
   """
 
-  import Typist.TypeDefinition
-
   defmacro __using__(_opts) do
     quote do
       import Typist
@@ -489,5 +487,16 @@ defmodule Typist do
 
   defp module_defined?(current_module, type_name) do
     current_module == type_name
+  end
+
+  # Returns the type definition from the AST.
+  # For union types, e.g.:
+  # `String.t | non_neg_integer | nil`
+  defp from_ast({:|, _, types}) do
+    Enum.map(types, &from_ast/1)
+  end
+
+  defp from_ast(ast) do
+    {Macro.to_string(ast), ast}
   end
 end
