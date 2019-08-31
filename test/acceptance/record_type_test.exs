@@ -22,7 +22,7 @@ defmodule Typist.RecordTypeTest do
                Product1.__type__()
              )
 
-      %Product1{code: "ABC123", price: 10_00}
+      Product1.new(code: "ABC123", price: 10_00)
     end
 
     defmodule Product2 do
@@ -44,7 +44,7 @@ defmodule Typist.RecordTypeTest do
                Product2.__type__()
              )
 
-      %Product2{code: "ABC123", price: 10_00}
+      Product2.new(%{code: "ABC123", price: 10_00})
     end
   end
 end

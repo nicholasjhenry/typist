@@ -175,6 +175,19 @@ defmodule Typist do
     fields = Enum.map(type.fields, & &1.name)
     spec = get_spec(type)
 
+    # %{required(:code) => String.t, required(:price) => non_neg_integer()})
+    #  {:%{}, [],
+    # [
+    #   {{:required, [], [:code]},
+    #    {{:., [], [{:__aliases__, [alias: false], [:String]}, :t]}, [], []}},
+    #   {{:required, [], [:price]}, {:non_neg_integer, [], []}}
+    # ]}
+    constructor_spec =
+      Enum.map(type.fields, fn field ->
+        %{name: name, type: {_, x}} = field
+        {{:required, [], [name]}, x}
+      end)
+
     quote do
       @enforce_keys unquote(fields)
       defstruct unquote(fields)
@@ -182,6 +195,11 @@ defmodule Typist do
 
       def __type__ do
         unquote(Macro.escape(type))
+      end
+
+      @spec new(%{unquote_splicing(constructor_spec)}) :: t
+      def new(fields) do
+        struct(__MODULE__, fields)
       end
     end
   end
@@ -199,6 +217,12 @@ defmodule Typist do
     fields = Enum.map(type.fields, & &1.name)
     spec = get_spec(type)
 
+    constructor_spec =
+      Enum.map(type.fields, fn field ->
+        %{name: name, type: {_, x}} = field
+        {{:required, [], [name]}, x}
+      end)
+
     quote do
       defmodule unquote(Module.concat([__CALLER__.module, type.name])) do
         @enforce_keys unquote(fields)
@@ -207,6 +231,11 @@ defmodule Typist do
 
         def __type__ do
           unquote(Macro.escape(type))
+        end
+
+        @spec new(%{unquote_splicing(constructor_spec)}) :: t
+        def new(fields) do
+          struct(__MODULE__, fields)
         end
       end
     end
@@ -222,6 +251,7 @@ defmodule Typist do
     if module_defined?(current_module, type.name) do
       quote do
         unquote(struct_defn)
+        unquote(spec)
 
         def __type__ do
           unquote(Macro.escape(type))
