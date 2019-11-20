@@ -11,12 +11,34 @@ defmodule Typist.SingleCaseUnionType do
   @enforce_keys [:name, :type]
   defstruct [:name, :type]
 
+  alias Typist.Ast
   import Typist.Utils
+
+  def build(module, ast, _block \\ :none) do
+    current_module = current_module(module)
+
+    case maybe_type(current_module, ast) do
+      :none ->
+        :none
+
+      type ->
+        spec = spec(type)
+        Ast.build(current_module, module, type, spec)
+    end
+  end
+
+  def spec(union_type) do
+    {_, ast} = union_type.type
+
+    quote do
+      @type t :: %__MODULE__{value: unquote(ast)}
+    end
+  end
 
   # Data type: Single case union type, inline
   #
   # deftype ProductCode1 :: String.t()
-  def maybe_build(
+  def maybe_type(
         _current_module,
         {
           :"::",
@@ -37,7 +59,7 @@ defmodule Typist.SingleCaseUnionType do
   #
   #   deftype String.t()
   # end
-  def maybe_build(
+  def maybe_type(
         current_module,
         {{:., _, [_, _]}, _, []} = type_to_be_wrapped
       ) do
@@ -54,7 +76,7 @@ defmodule Typist.SingleCaseUnionType do
   #
   #   deftype binary
   # end
-  def maybe_build(
+  def maybe_type(
         _current_module,
         {:"::", _,
          [
@@ -77,7 +99,7 @@ defmodule Typist.SingleCaseUnionType do
   #   deftype binary
   # end
 
-  def maybe_build(
+  def maybe_type(
         _current_module,
         {:"::", _,
          [
@@ -91,5 +113,5 @@ defmodule Typist.SingleCaseUnionType do
     }
   end
 
-  def maybe_build(_current_module, _ast), do: :none
+  def maybe_type(_current_module, _ast), do: :none
 end

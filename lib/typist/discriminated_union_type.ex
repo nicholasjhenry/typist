@@ -14,13 +14,31 @@ defmodule Typist.DiscriminatedUnionType do
   @enforce_keys [:name, :types]
   defstruct [:name, :types]
 
+  alias Typist.Ast
   import Typist.Utils
 
+  def build(module, ast, _block \\ :none) do
+    current_module = current_module(module)
+
+    case maybe_type(current_module, ast) do
+      :none ->
+        :none
+
+      type ->
+        spec = spec(type)
+        Ast.build(current_module, module, type, spec)
+    end
+  end
+
+  def spec(_union_type) do
+    quote do
+    end
+  end
+
   # Data type: discriminated union type, module
-  def maybe_build(
+  def maybe_type(
         current_module,
-        {:|, _, union_types},
-        _type
+        {:|, _, union_types}
       ) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
@@ -31,14 +49,13 @@ defmodule Typist.DiscriminatedUnionType do
   end
 
   # Data type: discriminated union type, inline
-  def maybe_build(
+  def maybe_type(
         _current_module,
         {:"::", _,
          [
            {:__aliases__, _, [module]},
            {:|, _, union_types}
-         ]},
-        :none
+         ]}
       ) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
@@ -48,5 +65,5 @@ defmodule Typist.DiscriminatedUnionType do
     }
   end
 
-  def maybe_build(_current_module, _ast, type), do: type
+  def maybe_type(_current_module, _ast), do: :none
 end

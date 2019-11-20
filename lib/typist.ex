@@ -125,190 +125,27 @@ defmodule Typist do
     end
   end
 
-  alias Typist.{DiscriminatedUnionType, SingleCaseUnionType, RecordType}
+  alias Typist.{DiscriminatedUnionType, ProductType, RecordType, SingleCaseUnionType}
 
-  defmodule ProductType do
-    @moduledoc """
-    Creating new types by “multiplying” existing types together.
-
-    From: https://fsharpforfunandprofit.com/posts/designing-with-types-intro/
-
-    > Guideline: Use records or tuples (product type) to group together data that are required to
-    > be consistent (that is “atomic”) but don’t needlessly group together data that is not related.
-
-    Example:
-
-        deftype Product :: {String.t, integer()}
-    """
-
-    @enforce_keys [:name, :type]
-    defstruct [:name, :type]
+  defmacro deftype(ast, do: block) do
+    maybe_build(__CALLER__.module, ast, block)
   end
 
-  # Data type: record, module
-  #
-  # defmodule Product do
-  #   deftype do
-  #     code :: ProductCode.t()
-  #     price :: float()
-  #   end
-  # end
-  #
-  # matches: do, ... end
-  defmacro deftype(do: {:__block__, _, _} = ast) do
-    RecordType.build(__CALLER__, ast)
+  defmacro deftype(do: block) do
+    maybe_build(__CALLER__.module, :none, block)
   end
 
-  # Data type: record, inline
-  #
-  # deftype Product do
-  #   code :: ProductCode.t()
-  #   price :: float()
-  # end
-  #
-  # matches: deftype Product do, ... end
-  defmacro deftype({:__aliases__, _, [_module]} = ast, do: block) do
-    RecordType.build(__CALLER__, ast, block)
-  end
-
-  # Discriminated Unions and Product Types
   defmacro deftype(ast) do
-    current_module = current_module(__CALLER__.module)
-    type = get_type(current_module, ast)
-    struct_defn = get_struct_defn(type)
-    spec = get_spec(type)
-
-    if module_defined?(current_module, type.name) do
-      quote do
-        unquote(struct_defn)
-        unquote(spec)
-
-        def __type__ do
-          unquote(Macro.escape(type))
-        end
-      end
-    else
-      quote do
-        defmodule unquote(Module.concat([__CALLER__.module, type.name])) do
-          unquote(struct_defn)
-          unquote(spec)
-
-          def __type__ do
-            unquote(Macro.escape(type))
-          end
-
-          def __spec__ do
-            unquote(Macro.to_string(spec))
-          end
-        end
-      end
-    end
+    maybe_build(__CALLER__.module, ast, :none)
   end
 
-  defp get_type(module, ast) do
-    type = SingleCaseUnionType.maybe_build(module, ast)
-    type = DiscriminatedUnionType.maybe_build(module, ast, type)
-    maybe_product_type(module, ast, type)
+  defp maybe_build(module, ast, block) do
+    RecordType.maybe_build(module, ast, block)
+    |> if_none(&SingleCaseUnionType.build(module, ast, &1))
+    |> if_none(&DiscriminatedUnionType.build(module, ast, &1))
+    |> if_none(&ProductType.build(module, ast, &1))
   end
 
-  defp get_struct_defn(type) do
-    case type do
-      %Typist.SingleCaseUnionType{} ->
-        quote do
-          @enforce_keys [:value]
-          defstruct [:value]
-        end
-
-      %Typist.ProductType{} ->
-        quote do
-          @enforce_keys [:value]
-          defstruct [:value]
-        end
-
-      %Typist.DiscriminatedUnionType{} ->
-        quote do
-          @enforce_keys [:value]
-          defstruct [:value]
-        end
-    end
-  end
-
-  defp get_spec(type) do
-    case type do
-      %Typist.SingleCaseUnionType{} = union_type ->
-        {_, ast} = union_type.type
-
-        quote do
-          @type t :: %__MODULE__{value: unquote(ast)}
-        end
-
-      %Typist.ProductType{} = product_type ->
-        {_, ast} = product_type.type
-
-        quote do
-          @type t :: %__MODULE__{value: unquote(ast)}
-        end
-
-      %Typist.DiscriminatedUnionType{} ->
-        quote do
-        end
-    end
-  end
-
-  # Data type: product type, inline
-  #
-  # deftype FirstLast :: {String.t(), String.t()}
-  defp maybe_product_type(
-         _current_module,
-         {
-           :"::",
-           _,
-           [{:__aliases__, _, [module]}, product_types]
-         },
-         :none
-       ) do
-    type_info = from_ast(product_types)
-
-    %Typist.ProductType{
-      name: module,
-      type: type_info
-    }
-  end
-
-  # Data type: product type, module
-  #
-  # defmodule FirstLast2 do
-  #   use Typist
-  #
-  #   deftype {String.t(), String.t()}
-  # end
-  defp maybe_product_type(current_module, product_types, :none) do
-    type_info = from_ast(product_types)
-
-    %Typist.ProductType{
-      name: current_module,
-      type: type_info
-    }
-  end
-
-  defp maybe_product_type(_current_module, _ast, type), do: type
-
-  defp current_module(caller_module) do
-    Module.split(caller_module) |> Enum.reverse() |> List.first() |> String.to_atom()
-  end
-
-  defp module_defined?(current_module, type_name) do
-    current_module == type_name
-  end
-
-  # Returns the type definition from the AST.
-  # For union types, e.g.:
-  # `String.t | non_neg_integer | nil`
-  defp from_ast({:|, _, types}) do
-    Enum.map(types, &from_ast/1)
-  end
-
-  defp from_ast(ast) do
-    {Macro.to_string(ast), ast}
-  end
+  defp if_none(:none, func), do: func.(:none)
+  defp if_none(result, _func), do: result
 end
