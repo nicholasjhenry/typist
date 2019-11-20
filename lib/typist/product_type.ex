@@ -62,6 +62,36 @@ defmodule Typist.RecordType do
     end
   end
 
+  def build(caller, ast, block) do
+    current_module = current_module(caller.module)
+    type = record_type(current_module, ast, block)
+    fields = Enum.map(type.fields, & &1.name)
+    spec = get_spec(type)
+
+    constructor_spec =
+      Enum.map(type.fields, fn field ->
+        %{name: name, type: {_, x}} = field
+        {{:required, [], [name]}, x}
+      end)
+
+    quote do
+      defmodule unquote(Module.concat([caller.module, type.name])) do
+        @enforce_keys unquote(fields)
+        defstruct unquote(fields)
+        @type t :: %__MODULE__{unquote_splicing(spec)}
+
+        def __type__ do
+          unquote(Macro.escape(type))
+        end
+
+        @spec new(%{unquote_splicing(constructor_spec)}) :: t
+        def new(fields) do
+          struct(__MODULE__, fields)
+        end
+      end
+    end
+  end
+
   # Data type: Record, module
   defp record_type(current_module, ast) do
     fields = Enum.map(ast, &build_field/1)

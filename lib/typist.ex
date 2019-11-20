@@ -199,33 +199,7 @@ defmodule Typist do
   #
   # matches: deftype Product do, ... end
   defmacro deftype({:__aliases__, _, [_module]} = ast, do: block) do
-    current_module = current_module(__CALLER__.module)
-    type = record_type(current_module, ast, block)
-    fields = Enum.map(type.fields, & &1.name)
-    spec = get_spec(type)
-
-    constructor_spec =
-      Enum.map(type.fields, fn field ->
-        %{name: name, type: {_, x}} = field
-        {{:required, [], [name]}, x}
-      end)
-
-    quote do
-      defmodule unquote(Module.concat([__CALLER__.module, type.name])) do
-        @enforce_keys unquote(fields)
-        defstruct unquote(fields)
-        @type t :: %__MODULE__{unquote_splicing(spec)}
-
-        def __type__ do
-          unquote(Macro.escape(type))
-        end
-
-        @spec new(%{unquote_splicing(constructor_spec)}) :: t
-        def new(fields) do
-          struct(__MODULE__, fields)
-        end
-      end
-    end
+    RecordType.build(__CALLER__, ast, block)
   end
 
   # Discriminated Unions and Product Types
@@ -292,16 +266,6 @@ defmodule Typist do
 
   defp get_spec(type) do
     case type do
-      %Typist.RecordType{} = record_type ->
-        Enum.map(record_type.fields, fn field ->
-          field_name_ast = field.name
-          type_ast = elem(field.type, 1)
-
-          quote do
-            {unquote(field_name_ast), unquote(type_ast)}
-          end
-        end)
-
       %Typist.SingleCaseUnionType{} = union_type ->
         {_, ast} = union_type.type
 
@@ -320,32 +284,6 @@ defmodule Typist do
         quote do
         end
     end
-  end
-
-  # Data type: Record, module
-  defp record_type(current_module, ast) do
-    fields = Enum.map(ast, &build_field/1)
-    %Typist.RecordType{name: current_module, fields: fields}
-  end
-
-  # Data type: Record, inline
-  defp record_type(
-         _current_module,
-         {:__aliases__, _, [module]},
-         {:__block__, _, ast}
-       ) do
-    record_type(module, ast)
-  end
-
-  defp build_field(
-         {:"::", _,
-          [
-            {name, _, nil},
-            type_to_be_wrapped
-          ]}
-       ) do
-    type = from_ast(type_to_be_wrapped)
-    %Typist.Field{name: name, type: type}
   end
 
   # Data type: Single case union type, inline
