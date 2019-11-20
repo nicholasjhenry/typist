@@ -200,7 +200,8 @@ defmodule Typist do
     defstruct [:name, :types]
   end
 
-  # Record type - module
+  # Data type: record, module
+  #
   # defmodule Product do
   #   deftype do
   #     code :: ProductCode.t()
@@ -215,6 +216,8 @@ defmodule Typist do
     fields = Enum.map(type.fields, & &1.name)
     spec = get_spec(type)
 
+    # AST: record, module
+    #
     # %{required(:code) => String.t, required(:price) => non_neg_integer()})
     #  {:%{}, [],
     # [
@@ -244,7 +247,8 @@ defmodule Typist do
     end
   end
 
-  # Record type - inline
+  # Data type: record, inline
+  #
   # deftype Product do
   #   code :: ProductCode.t()
   #   price :: float()
@@ -375,13 +379,13 @@ defmodule Typist do
     end
   end
 
-  # Build the Record type from module syntax
+  # Data type: Record, module
   defp record_type(current_module, ast) do
     fields = Enum.map(ast, &build_field/1)
     %Typist.RecordType{name: current_module, fields: fields}
   end
 
-  # Build the Record type from inline syntax
+  # Data type: Record, inline
   defp record_type(
          _current_module,
          {:__aliases__, _, [module]},
@@ -401,7 +405,8 @@ defmodule Typist do
     %Typist.Field{name: name, type: type}
   end
 
-  # Example: "Single case union type - inline"
+  # Data type: Single case union type, inline
+  #
   # deftype ProductCode1 :: String.t()
   defp maybe_single_case_union_type(
          _current_module,
@@ -417,7 +422,8 @@ defmodule Typist do
     }
   end
 
-  # Example: "Single case union type - module, alias type"
+  # Data type: single case union type, module, (remote type)
+  #
   # defmodule ProductCode2 do
   #   use Typist
   #
@@ -433,7 +439,8 @@ defmodule Typist do
     }
   end
 
-  # Example: "Single case union type - module, basic type"
+  # Data type: single case union type, module, (basic type)"
+  #
   # defmodule ProductCode2 do
   #   use Typist
   #
@@ -453,7 +460,8 @@ defmodule Typist do
     }
   end
 
-  # Example: "Single case union type - module, basic type, multi-line AST"
+  # Data type: single case union type, module, (basic type, multi-line AST)
+  #
   # This can occur with a basic type such as a function
   # defmodule ProductCode2 do
   #   use Typist
@@ -476,12 +484,8 @@ defmodule Typist do
   end
 
   defp maybe_single_case_union_type(_current_module, _ast), do: :none
-  # defp maybe_single_case_union_type(current_module, ast) do
-  #   IO.inspect(ast, label: current_module)
-  #   :none
-  # end
 
-  # module
+  # Data type: discriminated union type, module
   defp maybe_discriminated_union_type(
          current_module,
          {:|, _, union_types},
@@ -495,7 +499,7 @@ defmodule Typist do
     }
   end
 
-  # inline
+  # Data type: discriminated union type, inline
   defp maybe_discriminated_union_type(
          _current_module,
          {:"::", _,
@@ -515,7 +519,8 @@ defmodule Typist do
 
   defp maybe_discriminated_union_type(_current_module, _ast, type), do: type
 
-  # Product type - inline
+  # Data type: product type, inline
+  #
   # deftype FirstLast :: {String.t(), String.t()}
   defp maybe_product_type(
          _current_module,
@@ -534,7 +539,8 @@ defmodule Typist do
     }
   end
 
-  # Product type - module
+  # Data type: product type, module
+  #
   # defmodule FirstLast2 do
   #   use Typist
   #
