@@ -33,7 +33,6 @@ defmodule Typist.RecordType do
 
       type ->
         spec = spec(type)
-
         build_ast(current_module, module, type, spec)
     end
   end

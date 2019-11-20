@@ -18,10 +18,10 @@ defmodule Typist.ProductType do
   alias Typist.Ast
   import Typist.Utils
 
-  def build(module, ast, _block \\ :none) do
+  def build(module, ast, block \\ :none) do
     current_module = current_module(module)
 
-    case maybe_type(current_module, ast) do
+    case maybe_type(current_module, ast, block) do
       :none ->
         :none
 
@@ -40,7 +40,8 @@ defmodule Typist.ProductType do
            :"::",
            _,
            [{:__aliases__, _, [module]}, product_types]
-         }
+         },
+         _block
        ) do
     type_info = from_ast(product_types)
 
@@ -57,7 +58,7 @@ defmodule Typist.ProductType do
   #
   #   deftype {String.t(), String.t()}
   # end
-  defp maybe_type(current_module, product_types) do
+  defp maybe_type(current_module, product_types, _block) do
     type_info = from_ast(product_types)
 
     %Typist.ProductType{

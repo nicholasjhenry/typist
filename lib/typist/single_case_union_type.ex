@@ -14,10 +14,10 @@ defmodule Typist.SingleCaseUnionType do
   alias Typist.Ast
   import Typist.Utils
 
-  def build(module, ast, _block \\ :none) do
+  def build(module, ast, block \\ :none) do
     current_module = current_module(module)
 
-    case maybe_type(current_module, ast) do
+    case maybe_type(current_module, ast, block) do
       :none ->
         :none
 
@@ -44,7 +44,8 @@ defmodule Typist.SingleCaseUnionType do
           :"::",
           _,
           [{:__aliases__, _, [module]}, {{:., _, [_, _]}, _, _} = type_to_be_wrapped]
-        }
+        },
+        _block
       ) do
     %Typist.SingleCaseUnionType{
       name: module,
@@ -61,7 +62,8 @@ defmodule Typist.SingleCaseUnionType do
   # end
   def maybe_type(
         current_module,
-        {{:., _, [_, _]}, _, []} = type_to_be_wrapped
+        {{:., _, [_, _]}, _, []} = type_to_be_wrapped,
+        _block
       ) do
     %Typist.SingleCaseUnionType{
       name: current_module,
@@ -82,7 +84,8 @@ defmodule Typist.SingleCaseUnionType do
          [
            {:__aliases__, _, [module]},
            {_basic_type, _, nil} = type_to_be_wrapped
-         ]}
+         ]},
+        _block
       ) do
     %Typist.SingleCaseUnionType{
       name: module,
@@ -105,7 +108,8 @@ defmodule Typist.SingleCaseUnionType do
          [
            {:__aliases__, _, [module]},
            [_] = type_to_be_wrapped
-         ]}
+         ]},
+        _block
       ) do
     %Typist.SingleCaseUnionType{
       name: module,
@@ -113,5 +117,5 @@ defmodule Typist.SingleCaseUnionType do
     }
   end
 
-  def maybe_type(_current_module, _ast), do: :none
+  def maybe_type(_current_module, _ast, _block), do: :none
 end
