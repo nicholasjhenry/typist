@@ -40,37 +40,7 @@ defmodule Typist.RecordType do
     type = type(current_module, ast, block)
     spec = spec(type)
 
-    fields = Enum.map(type.fields, & &1.name)
-
-    # AST: record, module
-    #
-    # %{required(:code) => String.t, required(:price) => non_neg_integer()})
-    #  {:%{}, [],
-    # [
-    #   {{:required, [], [:code]},
-    #    {{:., [], [{:__aliases__, [alias: false], [:String]}, :t]}, [], []}},
-    #   {{:required, [], [:price]}, {:non_neg_integer, [], []}}
-    # ]}
-    constructor_spec =
-      Enum.map(type.fields, fn field ->
-        %{name: name, type: {_, x}} = field
-        {{:required, [], [name]}, x}
-      end)
-
-    quote do
-      @enforce_keys unquote(fields)
-      defstruct unquote(fields)
-      @type t :: %__MODULE__{unquote_splicing(spec)}
-
-      def __type__ do
-        unquote(Macro.escape(type))
-      end
-
-      @spec new(%{unquote_splicing(constructor_spec)}) :: t
-      def new(fields) do
-        struct(__MODULE__, fields)
-      end
-    end
+    build_ast(type, spec)
   end
 
   # Data type: record, inline
@@ -84,29 +54,11 @@ defmodule Typist.RecordType do
   def maybe_build(module, {:__aliases__, _, [_module]} = ast, block) do
     current_module = current_module(module)
     type = type(current_module, ast, block)
-    fields = Enum.map(type.fields, & &1.name)
     spec = spec(type)
-
-    constructor_spec =
-      Enum.map(type.fields, fn field ->
-        %{name: name, type: {_, x}} = field
-        {{:required, [], [name]}, x}
-      end)
 
     quote do
       defmodule unquote(Module.concat([module, type.name])) do
-        @enforce_keys unquote(fields)
-        defstruct unquote(fields)
-        @type t :: %__MODULE__{unquote_splicing(spec)}
-
-        def __type__ do
-          unquote(Macro.escape(type))
-        end
-
-        @spec new(%{unquote_splicing(constructor_spec)}) :: t
-        def new(fields) do
-          struct(__MODULE__, fields)
-        end
+        unquote(build_ast(type, spec))
       end
     end
   end
@@ -148,5 +100,30 @@ defmodule Typist.RecordType do
         {unquote(field_name_ast), unquote(type_ast)}
       end
     end)
+  end
+
+  defp build_ast(type, spec) do
+    fields = Enum.map(type.fields, & &1.name)
+
+    constructor_spec =
+      Enum.map(type.fields, fn field ->
+        %{name: name, type: {_, x}} = field
+        {{:required, [], [name]}, x}
+      end)
+
+    quote do
+      @enforce_keys unquote(fields)
+      defstruct unquote(fields)
+      @type t :: %__MODULE__{unquote_splicing(spec)}
+
+      def __type__ do
+        unquote(Macro.escape(type))
+      end
+
+      @spec new(%{unquote_splicing(constructor_spec)}) :: t
+      def new(fields) do
+        struct(__MODULE__, fields)
+      end
+    end
   end
 end

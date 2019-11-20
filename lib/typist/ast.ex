@@ -3,32 +3,27 @@ defmodule Typist.Ast do
     struct_defn = struct_defn(type)
 
     if module_defined?(current_module, type.name) do
-      quote do
-        unquote(struct_defn)
-        unquote(spec)
-
-        def __type__ do
-          unquote(Macro.escape(type))
-        end
-
-        def __spec__ do
-          unquote(Macro.to_string(spec))
-        end
-      end
+      build_ast(struct_defn, spec, type)
     else
       quote do
         defmodule unquote(Module.concat([module, type.name])) do
-          unquote(struct_defn)
-          unquote(spec)
-
-          def __type__ do
-            unquote(Macro.escape(type))
-          end
-
-          def __spec__ do
-            unquote(Macro.to_string(spec))
-          end
+          unquote(build_ast(struct_defn, spec, type))
         end
+      end
+    end
+  end
+
+  defp build_ast(struct_defn, spec, type) do
+    quote do
+      unquote(struct_defn)
+      unquote(spec)
+
+      def __type__ do
+        unquote(Macro.escape(type))
+      end
+
+      def __spec__ do
+        unquote(Macro.to_string(spec))
       end
     end
   end
