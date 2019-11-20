@@ -8,13 +8,6 @@ A DSL to define types inspired by libraries such as TypedStruct, Algae and the F
 
 See module documentation for examples.
 
-## Status
-
-STATUS: This is a work in progress. Do not use in production.
-
-- [ ] Generate typespec for records
-- [ ] Can a single case union type be treat as a discriminated union type?
-
 ## Why typist?
 
 Compared to other libraries, Typist is designed to be terse and optimized for wrapping a
