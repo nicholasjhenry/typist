@@ -42,12 +42,7 @@ defmodule Typist.ProductType do
          },
          _block
        ) do
-    type_info = from_ast(product_types)
-
-    %Typist.ProductType{
-      name: module_name,
-      type: type_info
-    }
+    type(module_name, product_types)
   end
 
   # Data type: product type, module
@@ -58,15 +53,17 @@ defmodule Typist.ProductType do
   #   deftype {String.t(), String.t()}
   # end
   defp maybe_type(module_name, product_types, _block) do
-    type_info = from_ast(product_types)
-
-    %Typist.ProductType{
-      name: module_name,
-      type: type_info
-    }
+    type(module_name, product_types)
   end
 
   # def maybe_type(_module_name, _ast), do: :none
+
+  defp type(module_name, product_types) do
+    %Typist.ProductType{
+      name: module_name,
+      type: from_ast(product_types)
+    }
+  end
 
   defp spec(product_type) do
     {_, ast} = product_type.type

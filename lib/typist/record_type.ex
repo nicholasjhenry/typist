@@ -48,8 +48,7 @@ defmodule Typist.RecordType do
   #
   # matches: do, ... end
   defp maybe_type(module_name, :none, {:__block__, _, block}) do
-    fields = Enum.map(block, &build_field/1)
-    %Typist.RecordType{name: module_name, fields: fields}
+    type(module_name, block)
   end
 
   # Data type: record, inline
@@ -60,11 +59,16 @@ defmodule Typist.RecordType do
   # end
   #
   # matches: deftype Product do, ... end
-  defp maybe_type(_module_name, {:__aliases__, _, [module_name]}, block) do
-    maybe_type(module_name, :none, block)
+  defp maybe_type(_module_name, {:__aliases__, _, [module_name]}, {:__block__, _, block}) do
+    type(module_name, block)
   end
 
   defp maybe_type(_module_name, _ast, _block), do: :none
+
+  defp type(module_name, block) do
+    fields = Enum.map(block, &build_field/1)
+    %Typist.RecordType{name: module_name, fields: fields}
+  end
 
   defp build_field(
          {:"::", _,

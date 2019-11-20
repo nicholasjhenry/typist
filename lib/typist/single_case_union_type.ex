@@ -42,14 +42,11 @@ defmodule Typist.SingleCaseUnionType do
         {
           :"::",
           _,
-          [{:__aliases__, _, [module_name]}, {{:., _, [_, _]}, _, _} = type_to_be_wrapped]
+          [{:__aliases__, _, [module_name]}, {{:., _, [_, _]}, _, _} = ast]
         },
         _block
       ) do
-    %Typist.SingleCaseUnionType{
-      name: module_name,
-      type: from_ast(type_to_be_wrapped)
-    }
+    type(module_name, ast)
   end
 
   # Data type: single case union type, module, (remote type)
@@ -61,13 +58,10 @@ defmodule Typist.SingleCaseUnionType do
   # end
   def maybe_type(
         module_name,
-        {{:., _, [_, _]}, _, []} = type_to_be_wrapped,
+        {{:., _, [_, _]}, _, []} = ast,
         _block
       ) do
-    %Typist.SingleCaseUnionType{
-      name: module_name,
-      type: from_ast(type_to_be_wrapped)
-    }
+    type(module_name, ast)
   end
 
   # Data type: single case union type, module, (basic type)"
@@ -82,14 +76,11 @@ defmodule Typist.SingleCaseUnionType do
         {:"::", _,
          [
            {:__aliases__, _, [module_name]},
-           {_basic_type, _, nil} = type_to_be_wrapped
+           {_basic_type, _, nil} = ast
          ]},
         _block
       ) do
-    %Typist.SingleCaseUnionType{
-      name: module_name,
-      type: from_ast(type_to_be_wrapped)
-    }
+    type(module_name, ast)
   end
 
   # Data type: single case union type, module, (basic type, multi-line AST)
@@ -106,15 +97,19 @@ defmodule Typist.SingleCaseUnionType do
         {:"::", _,
          [
            {:__aliases__, _, [module_name]},
-           [_] = type_to_be_wrapped
+           [_] = ast
          ]},
         _block
       ) do
-    %Typist.SingleCaseUnionType{
-      name: module_name,
-      type: from_ast(type_to_be_wrapped)
-    }
+    type(module_name, ast)
   end
 
   def maybe_type(_module_name, _ast, _block), do: :none
+
+  defp type(module_name, ast) do
+    %Typist.SingleCaseUnionType{
+      name: module_name,
+      type: from_ast(ast)
+    }
+  end
 end

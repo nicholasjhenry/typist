@@ -30,22 +30,14 @@ defmodule Typist.DiscriminatedUnionType do
   end
 
   def spec(_union_type) do
+    # NOTE: missing?
     quote do
     end
   end
 
   # Data type: discriminated union type, module
-  def maybe_type(
-        module_name,
-        {:|, _, union_types},
-        _block
-      ) do
-    types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
-
-    %Typist.DiscriminatedUnionType{
-      name: module_name,
-      types: types
-    }
+  def maybe_type(module_name, {:|, _, union_types}, _block) do
+    type(module_name, union_types)
   end
 
   # Data type: discriminated union type, inline
@@ -58,13 +50,14 @@ defmodule Typist.DiscriminatedUnionType do
          ]},
         _block
       ) do
-    types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
-
-    %Typist.DiscriminatedUnionType{
-      name: module_name,
-      types: types
-    }
+    type(module_name, union_types)
   end
 
   def maybe_type(_module_name, _ast, _block), do: :none
+
+  defp type(module_name, union_types) do
+    types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
+
+    %Typist.DiscriminatedUnionType{name: module_name, types: types}
+  end
 end
