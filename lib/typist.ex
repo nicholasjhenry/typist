@@ -4,8 +4,8 @@ defmodule Typist do
 
   ## Definitions
 
-  * Discriminated union (disjoint union, sum type):
-  * Product type (record):
+  * Discriminated union (AKA disjoint union, sum type):
+  * Product type (AKA record):
 
   ## References:
 
