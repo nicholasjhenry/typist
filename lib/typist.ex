@@ -128,7 +128,16 @@ defmodule Typist do
   defmodule RecordType do
     @moduledoc """
     A record type, a product type with named fields.
+
+    Example:
+
+        deftype ProductCode :: String.t
+        deftype Product do
+          code :: ProductCode.t()
+          price :: integer()
+        end
     """
+
     @enforce_keys [:name, :fields]
     defstruct [:name, :fields]
   end
@@ -137,6 +146,7 @@ defmodule Typist do
     @moduledoc """
     A field in a `RecordType`.
     """
+
     @enforce_keys [:name, :type]
     defstruct [:name, :type]
   end
@@ -146,20 +156,45 @@ defmodule Typist do
     Single case union type is used to wrap a primitive.
 
     https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
+
+    Example:
+
+        deftype ProductCode :: String.t
     """
     @enforce_keys [:name, :type]
     defstruct [:name, :type]
   end
 
   defmodule ProductType do
-    @moduledoc false
+    @moduledoc """
+    Creating new types by “multiplying” existing types together.
+
+    From: https://fsharpforfunandprofit.com/posts/designing-with-types-intro/
+
+    > Guideline: Use records or tuples (product type) to group together data that are required to
+    > be consistent (that is “atomic”) but don’t needlessly group together data that is not related.
+
+    Example:
+
+        deftype Product :: {String.t, integer()}
+    """
 
     @enforce_keys [:name, :type]
     defstruct [:name, :type]
   end
 
   defmodule DiscriminatedUnionType do
-    @moduledoc false
+    @moduledoc """
+    Create new types by “summing” existing types.
+
+    https://fsharpforfunandprofit.com/posts/discriminated-unions/
+
+    Example:
+
+        deftype Nickname :: String.t
+        deftype FirstLast :: {String.t, String.t}
+        deftype Name :: Nickname.t | FirstLast.t
+    """
 
     @enforce_keys [:name, :types]
     defstruct [:name, :types]
