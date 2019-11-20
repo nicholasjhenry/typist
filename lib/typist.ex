@@ -129,6 +129,7 @@ defmodule Typist do
     @moduledoc """
     A record type, a product type with named fields.
     """
+    @enforce_keys [:name, :fields]
     defstruct [:name, :fields]
   end
 
@@ -136,6 +137,7 @@ defmodule Typist do
     @moduledoc """
     A field in a `RecordType`.
     """
+    @enforce_keys [:name, :type]
     defstruct [:name, :type]
   end
 
@@ -145,18 +147,21 @@ defmodule Typist do
 
     https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
     """
+    @enforce_keys [:name, :type]
     defstruct [:name, :type]
   end
 
   defmodule ProductType do
     @moduledoc false
 
+    @enforce_keys [:name, :type]
     defstruct [:name, :type]
   end
 
   defmodule DiscriminatedUnionType do
     @moduledoc false
 
+    @enforce_keys [:name, :types]
     defstruct [:name, :types]
   end
 
