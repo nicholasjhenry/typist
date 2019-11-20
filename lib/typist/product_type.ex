@@ -15,8 +15,7 @@ defmodule Typist.ProductType do
   @enforce_keys [:name, :type]
   defstruct [:name, :type]
 
-  alias Typist.Ast
-  import Typist.Utils
+  import Typist.{Ast, Utils}
 
   def build(module, ast, block \\ :none) do
     current_module = current_module(module)
@@ -27,7 +26,7 @@ defmodule Typist.ProductType do
 
       type ->
         spec = spec(type)
-        Ast.build(current_module, module, type, spec)
+        build_ast(current_module, module, type, spec)
     end
   end
 

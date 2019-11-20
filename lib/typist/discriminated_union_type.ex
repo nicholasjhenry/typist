@@ -14,8 +14,7 @@ defmodule Typist.DiscriminatedUnionType do
   @enforce_keys [:name, :types]
   defstruct [:name, :types]
 
-  alias Typist.Ast
-  import Typist.Utils
+  import Typist.{Ast, Utils}
 
   def build(module, ast, block \\ :none) do
     current_module = current_module(module)
@@ -26,7 +25,7 @@ defmodule Typist.DiscriminatedUnionType do
 
       type ->
         spec = spec(type)
-        Ast.build(current_module, module, type, spec)
+        build_ast(current_module, module, type, spec)
     end
   end
 
