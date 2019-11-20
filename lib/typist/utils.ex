@@ -1,6 +1,15 @@
 defmodule Typist.Utils do
-  def current_module(caller_module) do
-    Module.split(caller_module) |> Enum.reverse() |> List.first() |> String.to_atom()
+  @doc """
+  # Example:
+
+    iex> Typist.Utils.module_name(MyApp.ProductCode)
+    :ProductCode
+  """
+  def module_name(module_path) do
+    Module.split(module_path)
+    |> Enum.reverse()
+    |> List.first()
+    |> String.to_atom()
   end
 
   def module_defined?(current_module, type_name) do

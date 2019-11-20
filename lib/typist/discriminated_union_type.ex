@@ -16,16 +16,16 @@ defmodule Typist.DiscriminatedUnionType do
 
   import Typist.{Ast, Utils}
 
-  def build(module, ast, block \\ :none) do
-    current_module = current_module(module)
+  def build(module_path, ast, block \\ :none) do
+    module_name = module_name(module_path)
 
-    case maybe_type(current_module, ast, block) do
+    case maybe_type(module_name, ast, block) do
       :none ->
         :none
 
       type ->
         spec = spec(type)
-        build_ast(current_module, module, type, spec)
+        build_ast(module_name, module_path, type, spec)
     end
   end
 
@@ -36,24 +36,24 @@ defmodule Typist.DiscriminatedUnionType do
 
   # Data type: discriminated union type, module
   def maybe_type(
-        current_module,
+        module_name,
         {:|, _, union_types},
         _block
       ) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
     %Typist.DiscriminatedUnionType{
-      name: current_module,
+      name: module_name,
       types: types
     }
   end
 
   # Data type: discriminated union type, inline
   def maybe_type(
-        _current_module,
+        _module_name,
         {:"::", _,
          [
-           {:__aliases__, _, [module]},
+           {:__aliases__, _, [module_name]},
            {:|, _, union_types}
          ]},
         _block
@@ -61,10 +61,10 @@ defmodule Typist.DiscriminatedUnionType do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
     %Typist.DiscriminatedUnionType{
-      name: module,
+      name: module_name,
       types: types
     }
   end
 
-  def maybe_type(_current_module, _ast, _block), do: :none
+  def maybe_type(_module_name, _ast, _block), do: :none
 end

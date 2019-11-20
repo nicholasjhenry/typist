@@ -24,16 +24,16 @@ defmodule Typist.RecordType do
 
   import Typist.Utils
 
-  def maybe_build(module, ast, block) do
-    current_module = current_module(module)
+  def maybe_build(module_path, ast, block) do
+    module_name = module_name(module_path)
 
-    case maybe_type(current_module, ast, block) do
+    case maybe_type(module_name, ast, block) do
       :none ->
         :none
 
       type ->
         spec = spec(type)
-        build_ast(current_module, module, type, spec)
+        build_ast(module_name, module_path, type, spec)
     end
   end
 
@@ -47,9 +47,9 @@ defmodule Typist.RecordType do
   # end
   #
   # matches: do, ... end
-  defp maybe_type(current_module, :none, {:__block__, _, block}) do
+  defp maybe_type(module_name, :none, {:__block__, _, block}) do
     fields = Enum.map(block, &build_field/1)
-    %Typist.RecordType{name: current_module, fields: fields}
+    %Typist.RecordType{name: module_name, fields: fields}
   end
 
   # Data type: record, inline
@@ -60,11 +60,11 @@ defmodule Typist.RecordType do
   # end
   #
   # matches: deftype Product do, ... end
-  defp maybe_type(_current_module, {:__aliases__, _, [module]}, block) do
-    maybe_type(module, :none, block)
+  defp maybe_type(_module_name, {:__aliases__, _, [module_name]}, block) do
+    maybe_type(module_name, :none, block)
   end
 
-  defp maybe_type(_current_module, _ast, _block), do: :none
+  defp maybe_type(_module_name, _ast, _block), do: :none
 
   defp build_field(
          {:"::", _,
@@ -88,12 +88,12 @@ defmodule Typist.RecordType do
     end)
   end
 
-  defp build_ast(current_module, module, type, spec) do
-    if module_defined?(current_module, type.name) do
+  defp build_ast(module_name, module_path, type, spec) do
+    if module_defined?(module_name, type.name) do
       do_build_ast(type, spec)
     else
       quote do
-        defmodule unquote(Module.concat([module, type.name])) do
+        defmodule unquote(Module.concat([module_path, type.name])) do
           unquote(do_build_ast(type, spec))
         end
       end

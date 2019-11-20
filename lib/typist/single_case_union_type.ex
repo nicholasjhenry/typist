@@ -13,16 +13,16 @@ defmodule Typist.SingleCaseUnionType do
 
   import Typist.{Ast, Utils}
 
-  def build(module, ast, block \\ :none) do
-    current_module = current_module(module)
+  def build(module_path, ast, block \\ :none) do
+    module_name = module_name(module_path)
 
-    case maybe_type(current_module, ast, block) do
+    case maybe_type(module_name, ast, block) do
       :none ->
         :none
 
       type ->
         spec = spec(type)
-        build_ast(current_module, module, type, spec)
+        build_ast(module_name, module_path, type, spec)
     end
   end
 
@@ -42,12 +42,12 @@ defmodule Typist.SingleCaseUnionType do
         {
           :"::",
           _,
-          [{:__aliases__, _, [module]}, {{:., _, [_, _]}, _, _} = type_to_be_wrapped]
+          [{:__aliases__, _, [module_name]}, {{:., _, [_, _]}, _, _} = type_to_be_wrapped]
         },
         _block
       ) do
     %Typist.SingleCaseUnionType{
-      name: module,
+      name: module_name,
       type: from_ast(type_to_be_wrapped)
     }
   end
@@ -60,12 +60,12 @@ defmodule Typist.SingleCaseUnionType do
   #   deftype String.t()
   # end
   def maybe_type(
-        current_module,
+        module_name,
         {{:., _, [_, _]}, _, []} = type_to_be_wrapped,
         _block
       ) do
     %Typist.SingleCaseUnionType{
-      name: current_module,
+      name: module_name,
       type: from_ast(type_to_be_wrapped)
     }
   end
@@ -78,16 +78,16 @@ defmodule Typist.SingleCaseUnionType do
   #   deftype binary
   # end
   def maybe_type(
-        _current_module,
+        _module_name,
         {:"::", _,
          [
-           {:__aliases__, _, [module]},
+           {:__aliases__, _, [module_name]},
            {_basic_type, _, nil} = type_to_be_wrapped
          ]},
         _block
       ) do
     %Typist.SingleCaseUnionType{
-      name: module,
+      name: module_name,
       type: from_ast(type_to_be_wrapped)
     }
   end
@@ -102,19 +102,19 @@ defmodule Typist.SingleCaseUnionType do
   # end
 
   def maybe_type(
-        _current_module,
+        _module_name,
         {:"::", _,
          [
-           {:__aliases__, _, [module]},
+           {:__aliases__, _, [module_name]},
            [_] = type_to_be_wrapped
          ]},
         _block
       ) do
     %Typist.SingleCaseUnionType{
-      name: module,
+      name: module_name,
       type: from_ast(type_to_be_wrapped)
     }
   end
 
-  def maybe_type(_current_module, _ast, _block), do: :none
+  def maybe_type(_module_name, _ast, _block), do: :none
 end

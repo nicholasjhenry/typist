@@ -17,16 +17,16 @@ defmodule Typist.ProductType do
 
   import Typist.{Ast, Utils}
 
-  def build(module, ast, block \\ :none) do
-    current_module = current_module(module)
+  def build(module_path, ast, block \\ :none) do
+    module_name = module_name(module_path)
 
-    case maybe_type(current_module, ast, block) do
+    case maybe_type(module_name, ast, block) do
       :none ->
         :none
 
       type ->
         spec = spec(type)
-        build_ast(current_module, module, type, spec)
+        build_ast(module_name, module_path, type, spec)
     end
   end
 
@@ -34,18 +34,18 @@ defmodule Typist.ProductType do
   #
   # deftype FirstLast :: {String.t(), String.t()}
   defp maybe_type(
-         _current_module,
+         _module_name,
          {
            :"::",
            _,
-           [{:__aliases__, _, [module]}, product_types]
+           [{:__aliases__, _, [module_name]}, product_types]
          },
          _block
        ) do
     type_info = from_ast(product_types)
 
     %Typist.ProductType{
-      name: module,
+      name: module_name,
       type: type_info
     }
   end
@@ -57,16 +57,16 @@ defmodule Typist.ProductType do
   #
   #   deftype {String.t(), String.t()}
   # end
-  defp maybe_type(current_module, product_types, _block) do
+  defp maybe_type(module_name, product_types, _block) do
     type_info = from_ast(product_types)
 
     %Typist.ProductType{
-      name: current_module,
+      name: module_name,
       type: type_info
     }
   end
 
-  # def maybe_type(_current_module, _ast), do: :none
+  # def maybe_type(_module_name, _ast), do: :none
 
   defp spec(product_type) do
     {_, ast} = product_type.type

@@ -127,6 +127,10 @@ defmodule Typist do
 
   alias Typist.{DiscriminatedUnionType, ProductType, RecordType, SingleCaseUnionType}
 
+  # __CALLER__: See https://hexdocs.pm/elixir/Macro.Env.html
+  # module_path: The full qualified path of a module e.g. `Foo.Bar.Baz`
+  # module_name: The name of the module without the path e.g. `Baz`
+
   defmacro deftype(ast, do: block) do
     maybe_build(__CALLER__.module, ast, block)
   end
