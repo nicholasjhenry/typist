@@ -2,25 +2,24 @@ defmodule Typist.ProductTypeTest do
   use ExUnit.Case
   use Typist
 
-  alias Typist.ProductTypeTest.FirstLast1
-
   describe "product type" do
-    deftype FirstLast1 :: {String.t(), binary}
+    alias Typist.ProductTypeTest.FirstLast
 
-    # NOTE: note using ProductType struct
+    deftype FirstLast :: {String.t(), binary}
+
     test "inline" do
       assert match?(
                %Typist.ProductType{
-                 name: :FirstLast1,
+                 name: :FirstLast,
                  type: {"{String.t(), binary}", _}
                },
-               FirstLast1.__type__()
+               FirstLast.__type__()
              )
 
-      assert %FirstLast1{value: {"Jane", "Doe"}}
+      assert %FirstLast{value: {"Jane", "Doe"}}
     end
 
-    defmodule FirstLast2 do
+    defmodule Foo.FirstLast do
       use Typist
 
       deftype {String.t(), binary}
@@ -29,13 +28,13 @@ defmodule Typist.ProductTypeTest do
     test "module" do
       assert match?(
                %Typist.ProductType{
-                 name: :FirstLast2,
+                 name: :FirstLast,
                  type: {"{String.t(), binary}", _}
                },
-               FirstLast2.__type__()
+               Foo.FirstLast.__type__()
              )
 
-      assert %FirstLast2{value: {"Jane", "Doe"}}
+      assert %Foo.FirstLast{value: {"Jane", "Doe"}}
     end
   end
 end

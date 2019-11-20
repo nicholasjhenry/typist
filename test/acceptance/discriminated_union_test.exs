@@ -2,46 +2,46 @@ defmodule Typist.DiscriminatedUnionTest do
   use ExUnit.Case
   use Typist
 
-  alias Typist.DiscriminatedUnionTest.{Nickname3, Name3}
-
   describe "discriminated union" do
-    deftype FormalName3 :: String.t()
-    deftype Nickname3 :: String.t()
-    deftype FirstLast3 :: {String.t(), String.t()}
+    alias Typist.DiscriminatedUnionTest.{Nickname, Name}
 
-    deftype Name3 :: Nickname3.t() | FirstLast3.t() | FormatName3.t() | binary
+    deftype FormalName :: String.t()
+    deftype Nickname :: String.t()
+    deftype FirstLast :: {String.t(), String.t()}
+
+    deftype Name :: Nickname.t() | FirstLast.t() | FormatName.t() | binary
 
     test "inline" do
       assert match?(
                %Typist.DiscriminatedUnionType{
-                 name: :Name3,
+                 name: :Name,
                  types: [
-                   {"Nickname3.t()", _},
-                   {"FirstLast3.t()", _},
-                   {"FormatName3.t()", _},
+                   {"Nickname.t()", _},
+                   {"FirstLast.t()", _},
+                   {"FormatName.t()", _},
                    {"binary", _}
                  ]
                },
-               Name3.__type__()
+               Name.__type__()
              )
 
-      assert %Name3{value: %Nickname3{value: "Jimmy"}}
+      assert %Name{value: %Nickname{value: "Jimmy"}}
     end
 
-    defmodule Name4 do
-      deftype Nickname3.t() | FirstLast3.t() | FormatName3.t()
+    defmodule Foo.Name do
+      deftype Nickname.t() | FirstLast.t() | FormatName.t()
     end
 
     test "module" do
       assert match?(
                %Typist.DiscriminatedUnionType{
-                 name: :Name4,
-                 types: [{"Nickname3.t()", _}, {"FirstLast3.t()", _}, {"FormatName3.t()", _}]
+                 name: :Name,
+                 types: [{"Nickname.t()", _}, {"FirstLast.t()", _}, {"FormatName.t()", _}]
                },
-               Name4.__type__()
+               Foo.Name.__type__()
              )
 
-      assert %Name4{value: %Nickname3{value: "Jimmy"}}
+      assert %Foo.Name{value: %Nickname{value: "Jimmy"}}
     end
   end
 end
