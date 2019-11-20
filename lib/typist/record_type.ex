@@ -1,12 +1,3 @@
-defmodule Typist.Field do
-  @moduledoc """
-  A field in a `RecordType`.
-  """
-
-  @enforce_keys [:name, :type]
-  defstruct [:name, :type]
-end
-
 defmodule Typist.RecordType do
   @moduledoc """
   A record type, a product type with named fields.
@@ -19,6 +10,14 @@ defmodule Typist.RecordType do
         price :: integer()
       end
   """
+  defmodule Field do
+    @moduledoc """
+    A field in a `RecordType`.
+    """
+
+    @enforce_keys [:name, :type]
+    defstruct [:name, :type]
+  end
 
   @enforce_keys [:name, :fields]
   defstruct [:name, :fields]
@@ -88,7 +87,7 @@ defmodule Typist.RecordType do
           ]}
        ) do
     type = from_ast(type_to_be_wrapped)
-    %Typist.Field{name: name, type: type}
+    %Field{name: name, type: type}
   end
 
   defp spec(record_type) do

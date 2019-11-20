@@ -15,8 +15,8 @@ defmodule Typist.RecordTypeTest do
                %Typist.RecordType{
                  name: :Product,
                  fields: [
-                   %Typist.Field{name: :code, type: {"String.t()", _}},
-                   %Typist.Field{name: :price, type: {"integer", _}}
+                   %Typist.RecordType.Field{name: :code, type: {"String.t()", _}},
+                   %Typist.RecordType.Field{name: :price, type: {"integer", _}}
                  ]
                },
                Product.__type__()
@@ -37,8 +37,8 @@ defmodule Typist.RecordTypeTest do
                %Typist.RecordType{
                  name: :Product,
                  fields: [
-                   %Typist.Field{name: :code, type: {"String.t()", _}},
-                   %Typist.Field{name: :price, type: {"integer", _}}
+                   %Typist.RecordType.Field{name: :code, type: {"String.t()", _}},
+                   %Typist.RecordType.Field{name: :price, type: {"integer", _}}
                  ]
                },
                Foo.Product.__type__()
