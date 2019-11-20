@@ -24,6 +24,20 @@ defmodule Typist.RecordType do
 
   import Typist.Utils
 
+  def maybe_build(module, ast, block) do
+    current_module = current_module(module)
+
+    case maybe_type(current_module, ast, block) do
+      :none ->
+        :none
+
+      type ->
+        spec = spec(type)
+
+        build_ast(current_module, module, type, spec)
+    end
+  end
+
   # Data type: record, module
   #
   # defmodule Product do
@@ -34,12 +48,9 @@ defmodule Typist.RecordType do
   # end
   #
   # matches: do, ... end
-  def maybe_build(module, :none = ast, {:__block__, _, block}) do
-    current_module = current_module(module)
-    type = type(current_module, ast, block)
-    spec = spec(type)
-
-    build_ast(type, spec)
+  defp maybe_type(current_module, :none, {:__block__, _, block}) do
+    fields = Enum.map(block, &build_field/1)
+    %Typist.RecordType{name: current_module, fields: fields}
   end
 
   # Data type: record, inline
@@ -50,34 +61,11 @@ defmodule Typist.RecordType do
   # end
   #
   # matches: deftype Product do, ... end
-  def maybe_build(module, {:__aliases__, _, [_module]} = ast, block) do
-    current_module = current_module(module)
-    type = type(current_module, ast, block)
-    spec = spec(type)
-
-    quote do
-      defmodule unquote(Module.concat([module, type.name])) do
-        unquote(build_ast(type, spec))
-      end
-    end
+  defp maybe_type(_current_module, {:__aliases__, _, [module]}, block) do
+    maybe_type(module, :none, block)
   end
 
-  def maybe_build(_current_module, _ast, _block), do: :none
-
-  # Data type: Record, module
-  defp type(current_module, :none, block) do
-    fields = Enum.map(block, &build_field/1)
-    %Typist.RecordType{name: current_module, fields: fields}
-  end
-
-  # Data type: Record, inline
-  defp type(
-         _current_module,
-         {:__aliases__, _, [module]},
-         {:__block__, _, block}
-       ) do
-    type(module, :none, block)
-  end
+  defp maybe_type(_current_module, _ast, _block), do: :none
 
   defp build_field(
          {:"::", _,
@@ -101,7 +89,19 @@ defmodule Typist.RecordType do
     end)
   end
 
-  defp build_ast(type, spec) do
+  defp build_ast(current_module, module, type, spec) do
+    if module_defined?(current_module, type.name) do
+      do_build_ast(type, spec)
+    else
+      quote do
+        defmodule unquote(Module.concat([module, type.name])) do
+          unquote(do_build_ast(type, spec))
+        end
+      end
+    end
+  end
+
+  defp do_build_ast(type, spec) do
     fields = Enum.map(type.fields, & &1.name)
 
     constructor_spec =

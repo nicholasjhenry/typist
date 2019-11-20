@@ -1,4 +1,6 @@
 defmodule Typist.Ast do
+  import Typist.Utils
+
   def build(current_module, module, type, spec) do
     struct_defn = struct_defn(type)
 
@@ -26,10 +28,6 @@ defmodule Typist.Ast do
         unquote(Macro.to_string(spec))
       end
     end
-  end
-
-  defp module_defined?(current_module, type_name) do
-    current_module == type_name
   end
 
   defp struct_defn(_type) do
