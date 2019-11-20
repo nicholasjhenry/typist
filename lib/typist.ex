@@ -125,21 +125,7 @@ defmodule Typist do
     end
   end
 
-  alias Typist.RecordType
-
-  defmodule SingleCaseUnionType do
-    @moduledoc """
-    Single case union type is used to wrap a primitive.
-
-    https://fsharpforfunandprofit.com/posts/designing-with-types-single-case-dus/
-
-    Example:
-
-        deftype ProductCode :: String.t
-    """
-    @enforce_keys [:name, :type]
-    defstruct [:name, :type]
-  end
+  alias Typist.{DiscriminatedUnionType, SingleCaseUnionType, RecordType}
 
   defmodule ProductType do
     @moduledoc """
@@ -157,23 +143,6 @@ defmodule Typist do
 
     @enforce_keys [:name, :type]
     defstruct [:name, :type]
-  end
-
-  defmodule DiscriminatedUnionType do
-    @moduledoc """
-    Create new types by “summing” existing types.
-
-    https://fsharpforfunandprofit.com/posts/discriminated-unions/
-
-    Example:
-
-        deftype Nickname :: String.t
-        deftype FirstLast :: {String.t, String.t}
-        deftype Name :: Nickname.t | FirstLast.t
-    """
-
-    @enforce_keys [:name, :types]
-    defstruct [:name, :types]
   end
 
   # Data type: record, module
@@ -237,8 +206,8 @@ defmodule Typist do
   end
 
   defp get_type(module, ast) do
-    type = maybe_single_case_union_type(module, ast)
-    type = maybe_discriminated_union_type(module, ast, type)
+    type = SingleCaseUnionType.maybe_build(module, ast)
+    type = DiscriminatedUnionType.maybe_build(module, ast, type)
     maybe_product_type(module, ast, type)
   end
 
@@ -285,120 +254,6 @@ defmodule Typist do
         end
     end
   end
-
-  # Data type: Single case union type, inline
-  #
-  # deftype ProductCode1 :: String.t()
-  defp maybe_single_case_union_type(
-         _current_module,
-         {
-           :"::",
-           _,
-           [{:__aliases__, _, [module]}, {{:., _, [_, _]}, _, _} = type_to_be_wrapped]
-         }
-       ) do
-    %Typist.SingleCaseUnionType{
-      name: module,
-      type: from_ast(type_to_be_wrapped)
-    }
-  end
-
-  # Data type: single case union type, module, (remote type)
-  #
-  # defmodule ProductCode2 do
-  #   use Typist
-  #
-  #   deftype String.t()
-  # end
-  defp maybe_single_case_union_type(
-         current_module,
-         {{:., _, [_, _]}, _, []} = type_to_be_wrapped
-       ) do
-    %Typist.SingleCaseUnionType{
-      name: current_module,
-      type: from_ast(type_to_be_wrapped)
-    }
-  end
-
-  # Data type: single case union type, module, (basic type)"
-  #
-  # defmodule ProductCode2 do
-  #   use Typist
-  #
-  #   deftype binary
-  # end
-  defp maybe_single_case_union_type(
-         _current_module,
-         {:"::", _,
-          [
-            {:__aliases__, _, [module]},
-            {_basic_type, _, nil} = type_to_be_wrapped
-          ]}
-       ) do
-    %Typist.SingleCaseUnionType{
-      name: module,
-      type: from_ast(type_to_be_wrapped)
-    }
-  end
-
-  # Data type: single case union type, module, (basic type, multi-line AST)
-  #
-  # This can occur with a basic type such as a function
-  # defmodule ProductCode2 do
-  #   use Typist
-  #
-  #   deftype binary
-  # end
-
-  defp maybe_single_case_union_type(
-         _current_module,
-         {:"::", _,
-          [
-            {:__aliases__, _, [module]},
-            [_] = type_to_be_wrapped
-          ]}
-       ) do
-    %Typist.SingleCaseUnionType{
-      name: module,
-      type: from_ast(type_to_be_wrapped)
-    }
-  end
-
-  defp maybe_single_case_union_type(_current_module, _ast), do: :none
-
-  # Data type: discriminated union type, module
-  defp maybe_discriminated_union_type(
-         current_module,
-         {:|, _, union_types},
-         _type
-       ) do
-    types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
-
-    %Typist.DiscriminatedUnionType{
-      name: current_module,
-      types: types
-    }
-  end
-
-  # Data type: discriminated union type, inline
-  defp maybe_discriminated_union_type(
-         _current_module,
-         {:"::", _,
-          [
-            {:__aliases__, _, [module]},
-            {:|, _, union_types}
-          ]},
-         :none
-       ) do
-    types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
-
-    %Typist.DiscriminatedUnionType{
-      name: module,
-      types: types
-    }
-  end
-
-  defp maybe_discriminated_union_type(_current_module, _ast, type), do: type
 
   # Data type: product type, inline
   #
