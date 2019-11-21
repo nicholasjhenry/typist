@@ -19,8 +19,8 @@ defmodule Typist.RecordType do
     defstruct [:name, :type]
   end
 
-  @enforce_keys [:name, :spec, :fields, :module_path]
-  defstruct [:name, :spec, :fields, :module_path]
+  @enforce_keys [:name, :spec, :fields, :module_path, :defined]
+  defstruct [:name, :spec, :fields, :module_path, :defined]
 
   import Typist.Module
 
@@ -32,7 +32,7 @@ defmodule Typist.RecordType do
         :none
 
       type ->
-        build_ast(module_name, type)
+        build_ast(type)
     end
   end
 
@@ -47,7 +47,7 @@ defmodule Typist.RecordType do
   #
   # matches: do, ... end
   defp maybe_type(type_name, module_path, :none, {:__block__, _, block}) do
-    type(type_name, module_path, block)
+    type(type_name, module_path, block, :module)
   end
 
   # Data type: record, inline
@@ -64,18 +64,19 @@ defmodule Typist.RecordType do
          {:__aliases__, _, [type_name]},
          {:__block__, _, block}
        ) do
-    type(type_name, module_path, block)
+    type(type_name, module_path, block, :inline)
   end
 
-  defp maybe_type(_module_name, _module_path, _ast, _block), do: :none
+  defp maybe_type(_module_name, _module_path, _ast, _defined), do: :none
 
-  defp type(type_name, module_path, block) do
+  defp type(type_name, module_path, block, defined) do
     fields = Enum.map(block, &build_field/1)
 
     %Typist.RecordType{
       name: type_name,
       module_path: module_path,
       fields: fields,
+      defined: defined,
       spec: spec(fields)
     }
   end
@@ -106,15 +107,17 @@ defmodule Typist.RecordType do
     end
   end
 
-  defp build_ast(module_name, type) do
-    if module_defined?(module_name, type.name) do
-      do_build_ast(type)
-    else
-      quote do
-        defmodule unquote(Module.concat([type.module_path, type.name])) do
-          unquote(do_build_ast(type))
+  defp build_ast(type) do
+    case type.defined do
+      :module ->
+        do_build_ast(type)
+
+      :inline ->
+        quote do
+          defmodule unquote(Module.concat([type.module_path, type.name])) do
+            unquote(do_build_ast(type))
+          end
         end
-      end
     end
   end
 
