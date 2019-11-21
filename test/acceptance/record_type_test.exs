@@ -11,16 +11,15 @@ defmodule Typist.RecordTypeTest do
     end
 
     test "inline" do
-      assert match?(
-               %Typist.RecordType{
-                 name: :Product,
-                 fields: [
-                   %Typist.RecordType.Field{name: :code, type: {"String.t()", _}},
-                   %Typist.RecordType.Field{name: :price, type: {"integer", _}}
-                 ]
-               },
-               Product.__type__()
-             )
+      actual_type = Product.__type__()
+
+      assert match?(%Typist.RecordType{}, actual_type)
+      assert :Product == actual_type.name
+
+      assert [
+               %Typist.RecordType.Field{name: :code, type: {"String.t()", _}},
+               %Typist.RecordType.Field{name: :price, type: {"integer", _}}
+             ] = actual_type.fields
 
       Product.new(code: "ABC123", price: 10_00)
     end
@@ -33,16 +32,15 @@ defmodule Typist.RecordTypeTest do
     end
 
     test "module" do
-      assert match?(
-               %Typist.RecordType{
-                 name: :Product,
-                 fields: [
-                   %Typist.RecordType.Field{name: :code, type: {"String.t()", _}},
-                   %Typist.RecordType.Field{name: :price, type: {"integer", _}}
-                 ]
-               },
-               Foo.Product.__type__()
-             )
+      actual_type = Foo.Product.__type__()
+
+      assert match?(%Typist.RecordType{}, actual_type)
+      assert :Product == actual_type.name
+
+      assert [
+               %Typist.RecordType.Field{name: :code, type: {"String.t()", _}},
+               %Typist.RecordType.Field{name: :price, type: {"integer", _}}
+             ] = actual_type.fields
 
       assert Foo.Product.new(%{code: "ABC123", price: 10_00})
     end

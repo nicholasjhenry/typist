@@ -12,18 +12,13 @@ defmodule Typist.DiscriminatedUnionTest do
     deftype Name :: Nickname.t() | FirstLast.t() | FormatName.t() | binary
 
     test "inline" do
-      assert match?(
-               %Typist.DiscriminatedUnionType{
-                 name: :Name,
-                 types: [
-                   {"Nickname.t()", _},
-                   {"FirstLast.t()", _},
-                   {"FormatName.t()", _},
-                   {"binary", _}
-                 ]
-               },
-               Name.__type__()
-             )
+      actual_type = Name.__type__()
+
+      assert match?(%Typist.DiscriminatedUnionType{}, actual_type)
+      assert :Name == actual_type.name
+
+      assert [{"Nickname.t()", _}, {"FirstLast.t()", _}, {"FormatName.t()", _}, {"binary", _}] =
+               actual_type.types
 
       assert %Name{value: %Nickname{value: "Jimmy"}}
     end
@@ -33,13 +28,13 @@ defmodule Typist.DiscriminatedUnionTest do
     end
 
     test "module" do
-      assert match?(
-               %Typist.DiscriminatedUnionType{
-                 name: :Name,
-                 types: [{"Nickname.t()", _}, {"FirstLast.t()", _}, {"FormatName.t()", _}]
-               },
-               Foo.Name.__type__()
-             )
+      actual_type = Foo.Name.__type__()
+
+      assert match?(%Typist.DiscriminatedUnionType{}, actual_type)
+      assert :Name == actual_type.name
+
+      assert [{"Nickname.t()", _}, {"FirstLast.t()", _}, {"FormatName.t()", _}] =
+               actual_type.types
 
       assert %Foo.Name{value: %Nickname{value: "Jimmy"}}
     end

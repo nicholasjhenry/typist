@@ -13,10 +13,11 @@ defmodule Typist.SingleCaseUnionTypeTest do
     deftype ProductCodeFoo :: String.t()
 
     test "inline with alias" do
-      assert match?(
-               %Typist.SingleCaseUnionType{name: :ProductCodeFoo, type: {"String.t()", _}},
-               ProductCodeFoo.__type__()
-             )
+      actual_type = ProductCodeFoo.__type__()
+
+      assert match?(%Typist.SingleCaseUnionType{}, actual_type)
+      assert :ProductCodeFoo == actual_type.name
+      assert {"String.t()", _} = actual_type.type
 
       assert ProductCodeFoo.__spec__() == "@type(t :: %__MODULE__{value: String.t()})"
 
@@ -26,22 +27,23 @@ defmodule Typist.SingleCaseUnionTypeTest do
     deftype ProductCodeBar :: binary
 
     test "inline with basic" do
-      assert match?(
-               %Typist.SingleCaseUnionType{name: :ProductCodeBar, type: {"binary", _}},
-               ProductCodeBar.__type__()
-             )
+      actual_type = ProductCodeBar.__type__()
+
+      assert match?(%Typist.SingleCaseUnionType{}, actual_type)
+      assert :ProductCodeBar == actual_type.name
+      assert {"binary", _} = actual_type.type
     end
 
     deftype ProductCodeBaz :: (binary -> integer)
 
     test "inline with function" do
-      assert match?(
-               %Typist.SingleCaseUnionType{
-                 name: :ProductCodeBaz,
-                 type: {"(binary -> integer)", _}
-               },
-               ProductCodeBaz.__type__()
-             )
+      actual_type = ProductCodeBaz.__type__()
+
+      assert match?(%Typist.SingleCaseUnionType{}, actual_type)
+      assert :ProductCodeBaz == actual_type.name
+      assert {"(binary -> integer)", _} = actual_type.type
+
+      assert %ProductCodeBaz{value: fn _string -> 123 end}
     end
 
     defmodule ProductCodeQux do
@@ -51,10 +53,11 @@ defmodule Typist.SingleCaseUnionTypeTest do
     end
 
     test "module" do
-      assert match?(
-               %Typist.SingleCaseUnionType{name: :ProductCodeQux, type: {"String.t()", _}},
-               ProductCodeQux.__type__()
-             )
+      actual_type = ProductCodeQux.__type__()
+
+      assert match?(%Typist.SingleCaseUnionType{}, actual_type)
+      assert :ProductCodeQux == actual_type.name
+      assert {"String.t()", _} = actual_type.type
 
       assert %ProductCodeQux{value: "ABC123"}
     end

@@ -8,13 +8,11 @@ defmodule Typist.ProductTypeTest do
     deftype FirstLast :: {String.t(), binary}
 
     test "inline" do
-      assert match?(
-               %Typist.ProductType{
-                 name: :FirstLast,
-                 type: {"{String.t(), binary}", _}
-               },
-               FirstLast.__type__()
-             )
+      actual_type = FirstLast.__type__()
+
+      assert match?(%Typist.ProductType{}, actual_type)
+      assert :FirstLast == actual_type.name
+      assert {"{String.t(), binary}", _} = actual_type.type
 
       assert %FirstLast{value: {"Jane", "Doe"}}
     end
@@ -26,13 +24,11 @@ defmodule Typist.ProductTypeTest do
     end
 
     test "module" do
-      assert match?(
-               %Typist.ProductType{
-                 name: :FirstLast,
-                 type: {"{String.t(), binary}", _}
-               },
-               Foo.FirstLast.__type__()
-             )
+      actual_type = Foo.FirstLast.__type__()
+
+      assert match?(%Typist.ProductType{}, actual_type)
+      assert :FirstLast == actual_type.name
+      assert {"{String.t(), binary}", _} = actual_type.type
 
       assert %Foo.FirstLast{value: {"Jane", "Doe"}}
     end
