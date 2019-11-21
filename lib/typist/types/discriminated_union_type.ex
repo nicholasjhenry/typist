@@ -47,9 +47,10 @@ defmodule Typist.DiscriminatedUnionType do
 
   defp maybe_type(_module_name, _ast, _block, _defined), do: :none
 
-  defp type(type_name, module_path, {:|, _, union_types}, defined) do
-    types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
-    value = {:|, [], union_types}
+  defp type(type_name, module_path, value, defined) do
+    {:|, _, foo} = value
+
+    types = foo |> Enum.map(&from_ast/1) |> List.flatten()
 
     %Typist.DiscriminatedUnionType{
       name: type_name,
