@@ -21,6 +21,11 @@ defmodule Typist.DiscriminatedUnionTest do
                actual_type.types
     end
 
+    test "defines the spec" do
+      assert Name.__spec__() ==
+               "@type(t :: %__MODULE__{value: Nickname.t() | FirstLast.t() | FormalName.t() | binary})"
+    end
+
     test "can be constructed" do
       assert %Name{value: %Nickname{value: "Jimmy"}}
     end
@@ -43,6 +48,11 @@ defmodule Typist.DiscriminatedUnionTest do
 
       assert [{"Nickname.t()", _}, {"FirstLast.t()", _}, {"FormalName.t()", _}] =
                actual_type.types
+    end
+
+    test "defines the spec" do
+      assert Foo.Name.__spec__() ==
+               "@type(t :: %__MODULE__{value: Nickname.t() | FirstLast.t() | FormalName.t()})"
     end
 
     test "can be constructed" do

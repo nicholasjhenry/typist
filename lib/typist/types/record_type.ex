@@ -82,14 +82,19 @@ defmodule Typist.RecordType do
   end
 
   defp spec(record_type) do
-    Enum.map(record_type.fields, fn field ->
-      field_name_ast = field.name
-      type_ast = elem(field.type, 1)
+    field_specs =
+      Enum.map(record_type.fields, fn field ->
+        field_name_ast = field.name
+        type_ast = elem(field.type, 1)
 
-      quote do
-        {unquote(field_name_ast), unquote(type_ast)}
-      end
-    end)
+        quote do
+          {unquote(field_name_ast), unquote(type_ast)}
+        end
+      end)
+
+    quote do
+      @type t :: %__MODULE__{unquote_splicing(field_specs)}
+    end
   end
 
   defp build_ast(module_name, module_path, type, spec) do
@@ -116,10 +121,14 @@ defmodule Typist.RecordType do
     quote do
       @enforce_keys unquote(fields)
       defstruct unquote(fields)
-      @type t :: %__MODULE__{unquote_splicing(spec)}
+      unquote(spec)
 
       def __type__ do
         unquote(Macro.escape(type))
+      end
+
+      def __spec__ do
+        unquote(Macro.to_string(spec))
       end
 
       @spec new(%{unquote_splicing(constructor_spec)}) :: t

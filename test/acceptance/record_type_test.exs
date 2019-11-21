@@ -22,6 +22,10 @@ defmodule Typist.RecordTypeTest do
              ] = actual_type.fields
     end
 
+    test "defines the spec" do
+      assert Product.__spec__() == "@type(t :: %__MODULE__{code: String.t(), price: integer})"
+    end
+
     test "defines a constructor function" do
       assert %Product{code: "ABC123", price: 10_00} == Product.new(code: "ABC123", price: 10_00)
     end

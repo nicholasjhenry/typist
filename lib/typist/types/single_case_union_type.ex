@@ -26,26 +26,18 @@ defmodule Typist.SingleCaseUnionType do
     end
   end
 
-  def spec(union_type) do
-    {_, ast} = union_type.type
-
-    quote do
-      @type t :: %__MODULE__{value: unquote(ast)}
-    end
-  end
-
   # Data type: Single case union type, inline
   #
   # deftype ProductCode1 :: String.t()
-  def maybe_type(
-        _current_module,
-        {
-          :"::",
-          _,
-          [{:__aliases__, _, [module_name]}, {{:., _, [_, _]}, _, _} = ast]
-        },
-        _block
-      ) do
+  defp maybe_type(
+         _current_module,
+         {
+           :"::",
+           _,
+           [{:__aliases__, _, [module_name]}, {{:., _, [_, _]}, _, _} = ast]
+         },
+         _block
+       ) do
     type(module_name, ast)
   end
 
@@ -56,11 +48,11 @@ defmodule Typist.SingleCaseUnionType do
   #
   #   deftype String.t()
   # end
-  def maybe_type(
-        module_name,
-        {{:., _, [_, _]}, _, []} = ast,
-        _block
-      ) do
+  defp maybe_type(
+         module_name,
+         {{:., _, [_, _]}, _, []} = ast,
+         _block
+       ) do
     type(module_name, ast)
   end
 
@@ -71,15 +63,15 @@ defmodule Typist.SingleCaseUnionType do
   #
   #   deftype binary
   # end
-  def maybe_type(
-        _module_name,
-        {:"::", _,
-         [
-           {:__aliases__, _, [module_name]},
-           {_basic_type, _, nil} = ast
-         ]},
-        _block
-      ) do
+  defp maybe_type(
+         _module_name,
+         {:"::", _,
+          [
+            {:__aliases__, _, [module_name]},
+            {_basic_type, _, nil} = ast
+          ]},
+         _block
+       ) do
     type(module_name, ast)
   end
 
@@ -92,24 +84,32 @@ defmodule Typist.SingleCaseUnionType do
   #   deftype binary
   # end
 
-  def maybe_type(
-        _module_name,
-        {:"::", _,
-         [
-           {:__aliases__, _, [module_name]},
-           [_] = ast
-         ]},
-        _block
-      ) do
+  defp maybe_type(
+         _module_name,
+         {:"::", _,
+          [
+            {:__aliases__, _, [module_name]},
+            [_] = ast
+          ]},
+         _block
+       ) do
     type(module_name, ast)
   end
 
-  def maybe_type(_module_name, _ast, _block), do: :none
+  defp maybe_type(_module_name, _ast, _block), do: :none
 
   defp type(module_name, ast) do
     %Typist.SingleCaseUnionType{
       name: module_name,
       type: from_ast(ast)
     }
+  end
+
+  defp spec(union_type) do
+    {_, ast} = union_type.type
+
+    quote do
+      @type t :: %__MODULE__{value: unquote(ast)}
+    end
   end
 end

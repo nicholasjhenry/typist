@@ -12,7 +12,7 @@ defmodule Typist.DiscriminatedUnionType do
   """
 
   @enforce_keys [:name, :types]
-  defstruct [:name, :types]
+  defstruct [:name, :types, :raw]
 
   import Typist.{Ast, Utils}
 
@@ -29,35 +29,35 @@ defmodule Typist.DiscriminatedUnionType do
     end
   end
 
-  def spec(_union_type) do
-    # NOTE: missing?
-    quote do
-    end
-  end
-
   # Data type: discriminated union type, module
-  def maybe_type(module_name, {:|, _, union_types}, _block) do
+  defp maybe_type(module_name, {:|, _, union_types}, _block) do
     type(module_name, union_types)
   end
 
   # Data type: discriminated union type, inline
-  def maybe_type(
-        _module_name,
-        {:"::", _,
-         [
-           {:__aliases__, _, [module_name]},
-           {:|, _, union_types}
-         ]},
-        _block
-      ) do
+  defp maybe_type(
+         _module_name,
+         {:"::", _,
+          [
+            {:__aliases__, _, [module_name]},
+            {:|, _, union_types}
+          ]},
+         _block
+       ) do
     type(module_name, union_types)
   end
 
-  def maybe_type(_module_name, _ast, _block), do: :none
+  defp maybe_type(_module_name, _ast, _block), do: :none
 
   defp type(module_name, union_types) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
-    %Typist.DiscriminatedUnionType{name: module_name, types: types}
+    %Typist.DiscriminatedUnionType{name: module_name, types: types, raw: union_types}
+  end
+
+  defp spec(union_types) do
+    quote do
+      @type t :: %__MODULE__{value: unquote({:|, [], union_types.raw})}
+    end
   end
 end

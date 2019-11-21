@@ -12,7 +12,9 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert match?(%Typist.SingleCaseUnionType{}, actual_type)
       assert :ProductCodeFoo == actual_type.name
       assert {"String.t()", _} = actual_type.type
+    end
 
+    test "defines the spec" do
       assert ProductCodeFoo.__spec__() == "@type(t :: %__MODULE__{value: String.t()})"
     end
 
@@ -33,6 +35,10 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert {"binary", _} = actual_type.type
     end
 
+    test "defines the spec" do
+      assert ProductCodeBar.__spec__() == "@type(t :: %__MODULE__{value: binary})"
+    end
+
     test "can construct the type" do
       assert %ProductCodeBar{value: "ABC123"}
     end
@@ -48,6 +54,10 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert match?(%Typist.SingleCaseUnionType{}, actual_type)
       assert :ProductCodeBaz == actual_type.name
       assert {"(binary -> integer)", _} = actual_type.type
+    end
+
+    test "defines the spec" do
+      assert ProductCodeBaz.__spec__() == "@type(t :: %__MODULE__{value: (binary -> integer)})"
     end
 
     test "can construct the type" do
