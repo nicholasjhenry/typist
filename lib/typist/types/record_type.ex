@@ -22,7 +22,7 @@ defmodule Typist.RecordType do
   @enforce_keys [:name, :fields]
   defstruct [:name, :fields]
 
-  import Typist.Utils
+  import Typist.Module
 
   def maybe_build(module_path, ast, block) do
     module_name = module_name(module_path)
@@ -74,11 +74,10 @@ defmodule Typist.RecordType do
          {:"::", _,
           [
             {name, _, nil},
-            type_to_be_wrapped
+            ast
           ]}
        ) do
-    type = from_ast(type_to_be_wrapped)
-    %Field{name: name, type: type}
+    %Field{name: name, type: {Macro.to_string(ast), ast}}
   end
 
   defp spec(record_type) do

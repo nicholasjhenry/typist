@@ -14,7 +14,7 @@ defmodule Typist.DiscriminatedUnionType do
   @enforce_keys [:name, :value, :spec, :module_path, :defined]
   defstruct [:name, :value, :spec, :module_path, :defined]
 
-  import Typist.{Ast, Utils}
+  import Typist.{Ast, Module}
 
   def build(module_path, ast, block \\ :none) do
     case module_path |> module_name() |> maybe_type(module_path, ast, block) do
@@ -48,9 +48,6 @@ defmodule Typist.DiscriminatedUnionType do
   defp maybe_type(_module_name, _ast, _block, _defined), do: :none
 
   defp type(type_name, module_path, ast, defined) do
-    {:|, _, inner_ast} = ast
-    spec = spec(ast)
-
     %Typist.DiscriminatedUnionType{
       # The name of the type, e.g. `PersonalName`
       name: type_name,
@@ -61,7 +58,7 @@ defmodule Typist.DiscriminatedUnionType do
       # Type information as an AST, e.g. `Nickname.t() | FirstLast.t() | FormalName.t() | binary`
       value: ast,
       # The spec of the type as an AST, e.g. `@type t :: %__MODULE__{value: String.t()}`
-      spec: spec
+      spec: spec(ast)
     }
   end
 

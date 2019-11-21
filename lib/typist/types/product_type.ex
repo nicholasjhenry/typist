@@ -15,7 +15,7 @@ defmodule Typist.ProductType do
   @enforce_keys [:name, :value, :spec, :module_path, :defined]
   defstruct [:name, :value, :spec, :module_path, :defined]
 
-  import Typist.{Ast, Utils}
+  import Typist.{Ast, Module}
 
   def build(module_path, ast, block \\ :none) do
     module_name = module_name(module_path)
@@ -59,14 +59,11 @@ defmodule Typist.ProductType do
   defp maybe_type(_type_name, _module_path, _ast, _block), do: :none
 
   defp type(type_name, module_path, ast, defined) do
-    {_, value} = from_ast(ast)
-    spec = spec(value)
-
     %Typist.ProductType{
       name: type_name,
       module_path: module_path,
-      value: value,
-      spec: spec,
+      value: ast,
+      spec: spec(ast),
       defined: defined
     }
   end

@@ -12,7 +12,7 @@ defmodule Typist.SingleCaseUnionType do
 
   defstruct [:name, :value, :spec, :module_path, :defined]
 
-  import Typist.{Ast, Utils}
+  import Typist.{Ast, Module}
 
   def build(module_path, ast, block \\ :none) do
     module_name = module_name(module_path)
@@ -100,15 +100,12 @@ defmodule Typist.SingleCaseUnionType do
   defp maybe_type(_module_name, _module_path, _ast, _block), do: :none
 
   defp type(module_name, module_path, ast, defined) do
-    {_, value} = from_ast(ast)
-    spec = spec(value)
-
     %Typist.SingleCaseUnionType{
       name: module_name,
       module_path: module_path,
       defined: defined,
-      value: value,
-      spec: spec
+      value: ast,
+      spec: spec(ast)
     }
   end
 
