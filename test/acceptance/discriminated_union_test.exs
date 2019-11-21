@@ -17,12 +17,7 @@ defmodule Typist.DiscriminatedUnionTest do
       assert match?(%Typist.DiscriminatedUnionType{}, actual_type)
       assert :Name == actual_type.name
 
-      assert [{"Nickname.t()", _}, {"FirstLast.t()", _}, {"FormalName.t()", _}, {"binary", _}] =
-               actual_type.types
-    end
-
-    test "defines the spec" do
-      assert Name.__spec__() ==
+      assert actual_type.spec() ==
                "@type(t :: %__MODULE__{value: Nickname.t() | FirstLast.t() | FormalName.t() | binary})"
     end
 
@@ -46,12 +41,7 @@ defmodule Typist.DiscriminatedUnionTest do
       assert match?(%Typist.DiscriminatedUnionType{}, actual_type)
       assert :Name == actual_type.name
 
-      assert [{"Nickname.t()", _}, {"FirstLast.t()", _}, {"FormalName.t()", _}] =
-               actual_type.types
-    end
-
-    test "defines the spec" do
-      assert Foo.Name.__spec__() ==
+      assert actual_type.spec ==
                "@type(t :: %__MODULE__{value: Nickname.t() | FirstLast.t() | FormalName.t()})"
     end
 

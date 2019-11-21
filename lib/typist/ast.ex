@@ -21,7 +21,7 @@ defmodule Typist.Ast do
       unquote(type.spec)
 
       def __type__ do
-        unquote(Macro.escape(type))
+        unquote(Macro.escape(%{type | spec: Macro.to_string(type.spec)}))
       end
 
       def __spec__ do

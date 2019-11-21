@@ -11,8 +11,8 @@ defmodule Typist.DiscriminatedUnionType do
       deftype Name :: Nickname.t | FirstLast.t
   """
 
-  @enforce_keys [:name, :types, :value, :spec, :module_path, :defined]
-  defstruct [:name, :types, :value, :spec, :module_path, :defined]
+  @enforce_keys [:name, :value, :spec, :module_path, :defined]
+  defstruct [:name, :value, :spec, :module_path, :defined]
 
   import Typist.{Ast, Utils}
 
@@ -27,8 +27,8 @@ defmodule Typist.DiscriminatedUnionType do
   end
 
   # Data type: discriminated union type, module
-  defp maybe_type(type_name, module_path, {:|, _, _} = union_types, _block) do
-    type(type_name, module_path, union_types, :module)
+  defp maybe_type(type_name, module_path, {:|, _, _} = ast, _block) do
+    type(type_name, module_path, ast, :module)
   end
 
   # Data type: discriminated union type, inline
@@ -38,27 +38,30 @@ defmodule Typist.DiscriminatedUnionType do
          {:"::", _,
           [
             {:__aliases__, _, [type_name]},
-            {:|, _, _} = union_types
+            {:|, _, _} = ast
           ]},
          _block
        ) do
-    type(type_name, module_path, union_types, :inline)
+    type(type_name, module_path, ast, :inline)
   end
 
   defp maybe_type(_module_name, _ast, _block, _defined), do: :none
 
-  defp type(type_name, module_path, value, defined) do
-    {:|, _, foo} = value
-
-    types = foo |> Enum.map(&from_ast/1) |> List.flatten()
+  defp type(type_name, module_path, ast, defined) do
+    {:|, _, inner_ast} = ast
+    spec = spec(ast)
 
     %Typist.DiscriminatedUnionType{
+      # The name of the type, e.g. `PersonalName`
       name: type_name,
+      # The module path in which the type was defined, e.g. `MyApp.Products.Price`
       module_path: module_path,
+      # How the type was defined, `:inline | :module`
       defined: defined,
-      types: types,
-      value: value,
-      spec: spec(value)
+      # Type information as an AST, e.g. `Nickname.t() | FirstLast.t() | FormalName.t() | binary`
+      value: ast,
+      # The spec of the type as an AST, e.g. `@type t :: %__MODULE__{value: String.t()}`
+      spec: spec
     }
   end
 

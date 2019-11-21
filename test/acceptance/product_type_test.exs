@@ -12,11 +12,7 @@ defmodule Typist.ProductTypeTest do
 
       assert match?(%Typist.ProductType{}, actual_type)
       assert :FirstLast == actual_type.name
-      assert {"{String.t(), binary}", _} = actual_type.type
-    end
-
-    test "defines the spec" do
-      assert FirstLast.__spec__() == "@type(t :: %__MODULE__{value: {String.t(), binary}})"
+      assert actual_type.spec == "@type(t :: %__MODULE__{value: {String.t(), binary}})"
     end
 
     test "defines a constructor function" do
@@ -36,11 +32,7 @@ defmodule Typist.ProductTypeTest do
 
       assert match?(%Typist.ProductType{}, actual_type)
       assert :FirstLast == actual_type.name
-      assert {"{String.t(), binary}", _} = actual_type.type
-    end
-
-    test "defines the spec" do
-      assert Foo.FirstLast.__spec__() == "@type(t :: %__MODULE__{value: {String.t(), binary}})"
+      assert actual_type.spec == "@type(t :: %__MODULE__{value: {String.t(), binary}})"
     end
 
     test "defines a constructor function" do

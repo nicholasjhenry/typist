@@ -8,9 +8,9 @@ defmodule Typist.SingleCaseUnionType do
 
       deftype ProductCode :: String.t
   """
-  @enforce_keys [:name, :type, :value, :spec, :module_path, :defined]
+  @enforce_keys [:name, :value, :spec, :module_path, :defined]
 
-  defstruct [:name, :type, :value, :spec, :module_path, :defined]
+  defstruct [:name, :value, :spec, :module_path, :defined]
 
   import Typist.{Ast, Utils}
 
@@ -100,16 +100,15 @@ defmodule Typist.SingleCaseUnionType do
   defp maybe_type(_module_name, _module_path, _ast, _block), do: :none
 
   defp type(module_name, module_path, ast, defined) do
-    type = from_ast(ast)
-    {_, value} = type
+    {_, value} = from_ast(ast)
+    spec = spec(value)
 
     %Typist.SingleCaseUnionType{
       name: module_name,
       module_path: module_path,
       defined: defined,
-      type: type,
       value: value,
-      spec: spec(value)
+      spec: spec
     }
   end
 
