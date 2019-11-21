@@ -11,8 +11,8 @@ defmodule Typist.DiscriminatedUnionType do
       deftype Name :: Nickname.t | FirstLast.t
   """
 
-  @enforce_keys [:name, :value, :spec, :module_path, :defined]
-  defstruct [:name, :value, :spec, :module_path, :defined]
+  @enforce_keys [:name, :ast, :spec, :module_path, :defined]
+  defstruct [:name, :ast, :spec, :module_path, :defined]
 
   import Typist.{Ast, Module}
 
@@ -56,7 +56,7 @@ defmodule Typist.DiscriminatedUnionType do
       # How the type was defined, `:inline | :module`
       defined: defined,
       # Type information as an AST, e.g. `Nickname.t() | FirstLast.t() | FormalName.t() | binary`
-      value: ast,
+      ast: ast,
       # The spec of the type as an AST, e.g. `@type t :: %__MODULE__{value: String.t()}`
       spec: spec(ast)
     }

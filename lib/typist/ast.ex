@@ -28,7 +28,7 @@ defmodule Typist.Ast do
         unquote(Macro.to_string(type.spec))
       end
 
-      @spec new(unquote(type.value)) :: t
+      @spec new(unquote(type.ast)) :: t
       def new(value) do
         struct!(__MODULE__, value: value)
       end

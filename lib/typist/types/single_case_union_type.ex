@@ -8,9 +8,9 @@ defmodule Typist.SingleCaseUnionType do
 
       deftype ProductCode :: String.t
   """
-  @enforce_keys [:name, :value, :spec, :module_path, :defined]
+  @enforce_keys [:name, :ast, :spec, :module_path, :defined]
 
-  defstruct [:name, :value, :spec, :module_path, :defined]
+  defstruct [:name, :ast, :spec, :module_path, :defined]
 
   import Typist.{Ast, Module}
 
@@ -104,7 +104,7 @@ defmodule Typist.SingleCaseUnionType do
       name: module_name,
       module_path: module_path,
       defined: defined,
-      value: ast,
+      ast: ast,
       spec: spec(ast)
     }
   end
