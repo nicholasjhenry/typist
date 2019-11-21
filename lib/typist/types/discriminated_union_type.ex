@@ -12,7 +12,7 @@ defmodule Typist.DiscriminatedUnionType do
   """
 
   @enforce_keys [:name, :types]
-  defstruct [:name, :types, :raw]
+  defstruct [:name, :types, :value]
 
   import Typist.{Ast, Utils}
 
@@ -52,12 +52,12 @@ defmodule Typist.DiscriminatedUnionType do
   defp type(module_name, union_types) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
 
-    %Typist.DiscriminatedUnionType{name: module_name, types: types, raw: union_types}
+    %Typist.DiscriminatedUnionType{name: module_name, types: types, value: {:|, [], union_types}}
   end
 
-  defp spec(union_types) do
+  defp spec(type) do
     quote do
-      @type t :: %__MODULE__{value: unquote({:|, [], union_types.raw})}
+      @type t :: %__MODULE__{value: unquote(type.value)}
     end
   end
 end
