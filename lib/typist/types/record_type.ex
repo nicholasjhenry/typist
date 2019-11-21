@@ -19,20 +19,20 @@ defmodule Typist.RecordType do
     defstruct [:name, :type]
   end
 
-  @enforce_keys [:name, :spec, :fields]
-  defstruct [:name, :spec, :fields]
+  @enforce_keys [:name, :spec, :fields, :module_path]
+  defstruct [:name, :spec, :fields, :module_path]
 
   import Typist.Module
 
   def maybe_build(module_path, ast, block) do
     module_name = module_name(module_path)
 
-    case maybe_type(module_name, ast, block) do
+    case maybe_type(module_name, module_path, ast, block) do
       :none ->
         :none
 
       type ->
-        build_ast(module_name, module_path, type)
+        build_ast(module_name, type)
     end
   end
 
@@ -46,8 +46,8 @@ defmodule Typist.RecordType do
   # end
   #
   # matches: do, ... end
-  defp maybe_type(module_name, :none, {:__block__, _, block}) do
-    type(module_name, block)
+  defp maybe_type(type_name, module_path, :none, {:__block__, _, block}) do
+    type(type_name, module_path, block)
   end
 
   # Data type: record, inline
@@ -58,16 +58,26 @@ defmodule Typist.RecordType do
   # end
   #
   # matches: deftype Product do, ... end
-  defp maybe_type(_module_name, {:__aliases__, _, [module_name]}, {:__block__, _, block}) do
-    type(module_name, block)
+  defp maybe_type(
+         _module_name,
+         module_path,
+         {:__aliases__, _, [type_name]},
+         {:__block__, _, block}
+       ) do
+    type(type_name, module_path, block)
   end
 
-  defp maybe_type(_module_name, _ast, _block), do: :none
+  defp maybe_type(_module_name, _module_path, _ast, _block), do: :none
 
-  defp type(module_name, block) do
+  defp type(type_name, module_path, block) do
     fields = Enum.map(block, &build_field/1)
 
-    %Typist.RecordType{name: module_name, fields: fields, spec: spec(fields)}
+    %Typist.RecordType{
+      name: type_name,
+      module_path: module_path,
+      fields: fields,
+      spec: spec(fields)
+    }
   end
 
   defp build_field(
@@ -96,12 +106,12 @@ defmodule Typist.RecordType do
     end
   end
 
-  defp build_ast(module_name, module_path, type) do
+  defp build_ast(module_name, type) do
     if module_defined?(module_name, type.name) do
       do_build_ast(type)
     else
       quote do
-        defmodule unquote(Module.concat([module_path, type.name])) do
+        defmodule unquote(Module.concat([type.module_path, type.name])) do
           unquote(do_build_ast(type))
         end
       end
