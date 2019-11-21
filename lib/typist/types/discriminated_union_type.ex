@@ -11,8 +11,8 @@ defmodule Typist.DiscriminatedUnionType do
       deftype Name :: Nickname.t | FirstLast.t
   """
 
-  @enforce_keys [:name, :types]
-  defstruct [:name, :types, :value]
+  @enforce_keys [:name, :types, :value, :spec]
+  defstruct [:name, :types, :value, :spec]
 
   import Typist.{Ast, Utils}
 
@@ -24,8 +24,7 @@ defmodule Typist.DiscriminatedUnionType do
         :none
 
       type ->
-        spec = spec(type)
-        build_ast(module_name, module_path, type, spec)
+        build_ast(module_name, module_path, type)
     end
   end
 
@@ -51,13 +50,19 @@ defmodule Typist.DiscriminatedUnionType do
 
   defp type(module_name, union_types) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
+    value = {:|, [], union_types}
 
-    %Typist.DiscriminatedUnionType{name: module_name, types: types, value: {:|, [], union_types}}
+    %Typist.DiscriminatedUnionType{
+      name: module_name,
+      types: types,
+      value: value,
+      spec: spec(value)
+    }
   end
 
-  defp spec(type) do
+  defp spec(value) do
     quote do
-      @type t :: %__MODULE__{value: unquote(type.value)}
+      @type t :: %__MODULE__{value: unquote(value)}
     end
   end
 end

@@ -12,8 +12,8 @@ defmodule Typist.ProductType do
       deftype Product :: {String.t, integer()}
   """
 
-  @enforce_keys [:name, :type, :value]
-  defstruct [:name, :type, :value]
+  @enforce_keys [:name, :type, :value, :spec]
+  defstruct [:name, :type, :value, :spec]
 
   import Typist.{Ast, Utils}
 
@@ -25,8 +25,7 @@ defmodule Typist.ProductType do
         :none
 
       type ->
-        spec = spec(type)
-        build_ast(module_name, module_path, type, spec)
+        build_ast(module_name, module_path, type)
     end
   end
 
@@ -65,13 +64,14 @@ defmodule Typist.ProductType do
     %Typist.ProductType{
       name: module_name,
       type: type,
-      value: value
+      value: value,
+      spec: spec(value)
     }
   end
 
-  defp spec(type) do
+  defp spec(value) do
     quote do
-      @type t :: %__MODULE__{value: unquote(type.value)}
+      @type t :: %__MODULE__{value: unquote(value)}
     end
   end
 end
