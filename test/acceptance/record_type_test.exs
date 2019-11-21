@@ -20,10 +20,8 @@ defmodule Typist.RecordTypeTest do
                %Typist.RecordType.Field{name: :code, type: {"String.t()", _}},
                %Typist.RecordType.Field{name: :price, type: {"integer", _}}
              ] = actual_type.fields
-    end
 
-    test "defines the spec" do
-      assert Product.__spec__() == "@type(t :: %__MODULE__{code: String.t(), price: integer})"
+      assert actual_type.spec == "@type(t :: %__MODULE__{code: String.t(), price: integer})"
     end
 
     test "defines a constructor function" do

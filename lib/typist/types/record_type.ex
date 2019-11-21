@@ -19,8 +19,8 @@ defmodule Typist.RecordType do
     defstruct [:name, :type]
   end
 
-  @enforce_keys [:name, :fields]
-  defstruct [:name, :fields]
+  @enforce_keys [:name, :spec, :fields]
+  defstruct [:name, :spec, :fields]
 
   import Typist.Module
 
@@ -32,8 +32,7 @@ defmodule Typist.RecordType do
         :none
 
       type ->
-        spec = spec(type)
-        build_ast(module_name, module_path, type, spec)
+        build_ast(module_name, module_path, type)
     end
   end
 
@@ -67,7 +66,8 @@ defmodule Typist.RecordType do
 
   defp type(module_name, block) do
     fields = Enum.map(block, &build_field/1)
-    %Typist.RecordType{name: module_name, fields: fields}
+
+    %Typist.RecordType{name: module_name, fields: fields, spec: spec(fields)}
   end
 
   defp build_field(
@@ -80,9 +80,9 @@ defmodule Typist.RecordType do
     %Field{name: name, type: {Macro.to_string(ast), ast}}
   end
 
-  defp spec(record_type) do
+  defp spec(fields) do
     field_specs =
-      Enum.map(record_type.fields, fn field ->
+      Enum.map(fields, fn field ->
         field_name_ast = field.name
         type_ast = elem(field.type, 1)
 
@@ -96,19 +96,19 @@ defmodule Typist.RecordType do
     end
   end
 
-  defp build_ast(module_name, module_path, type, spec) do
+  defp build_ast(module_name, module_path, type) do
     if module_defined?(module_name, type.name) do
-      do_build_ast(type, spec)
+      do_build_ast(type)
     else
       quote do
         defmodule unquote(Module.concat([module_path, type.name])) do
-          unquote(do_build_ast(type, spec))
+          unquote(do_build_ast(type))
         end
       end
     end
   end
 
-  defp do_build_ast(type, spec) do
+  defp do_build_ast(type) do
     fields = Enum.map(type.fields, & &1.name)
 
     constructor_spec =
@@ -120,14 +120,10 @@ defmodule Typist.RecordType do
     quote do
       @enforce_keys unquote(fields)
       defstruct unquote(fields)
-      unquote(spec)
+      unquote(type.spec)
 
       def __type__ do
-        unquote(Macro.escape(type))
-      end
-
-      def __spec__ do
-        unquote(Macro.to_string(spec))
+        unquote(Macro.escape(%{type | spec: Macro.to_string(type.spec)}))
       end
 
       @spec new(%{unquote_splicing(constructor_spec)}) :: t
