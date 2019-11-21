@@ -1,23 +1,22 @@
 defmodule Typist.Ast do
   def build_ast(type) do
-    struct_defn = struct_defn(type)
-
     case type.defined do
       :module ->
-        do_build_ast(struct_defn, type)
+        do_build_ast(type)
 
       :inline ->
         quote do
           defmodule unquote(Module.concat([type.module_path, type.name])) do
-            unquote(do_build_ast(struct_defn, type))
+            unquote(do_build_ast(type))
           end
         end
     end
   end
 
-  defp do_build_ast(struct_defn, type) do
+  defp do_build_ast(type) do
     quote do
-      unquote(struct_defn)
+      @enforce_keys [:value]
+      defstruct [:value]
       unquote(type.spec)
 
       def __type__ do
@@ -32,13 +31,6 @@ defmodule Typist.Ast do
       def new(value) do
         struct!(__MODULE__, value: value)
       end
-    end
-  end
-
-  defp struct_defn(_type) do
-    quote do
-      @enforce_keys [:value]
-      defstruct [:value]
     end
   end
 end
