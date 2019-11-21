@@ -52,11 +52,11 @@ defmodule Typist.ProductType do
   #
   #   deftype {String.t(), String.t()}
   # end
-  defp maybe_type(type_name, module_path, product_types, _block) do
+  defp maybe_type(type_name, module_path, product_types, _block) when is_tuple(product_types) do
     type(type_name, module_path, product_types, :module)
   end
 
-  # def maybe_type(_module_name, _ast), do: :none
+  defp maybe_type(_type_name, _module_path, _ast, _block), do: :none
 
   defp type(type_name, module_path, product_types, defined) do
     type = from_ast(product_types)
