@@ -1,14 +1,14 @@
 defmodule Typist.Ast do
   import Typist.Utils
 
-  def build_ast(module_name, module_path, type) do
+  def build_ast(module_name, type) do
     struct_defn = struct_defn(type)
 
     if module_defined?(module_name, type.name) do
       do_build_ast(struct_defn, type)
     else
       quote do
-        defmodule unquote(Module.concat([module_path, type.name])) do
+        defmodule unquote(Module.concat([type.module_path, type.name])) do
           unquote(do_build_ast(struct_defn, type))
         end
       end

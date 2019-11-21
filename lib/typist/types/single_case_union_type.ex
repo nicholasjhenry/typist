@@ -8,20 +8,20 @@ defmodule Typist.SingleCaseUnionType do
 
       deftype ProductCode :: String.t
   """
-  @enforce_keys [:name, :type, :value, :spec]
-  defstruct [:name, :type, :value, :spec]
+  @enforce_keys [:name, :type, :value, :spec, :module_path]
+  defstruct [:name, :type, :value, :spec, :module_path]
 
   import Typist.{Ast, Utils}
 
   def build(module_path, ast, block \\ :none) do
     module_name = module_name(module_path)
 
-    case maybe_type(module_name, ast, block) do
+    case maybe_type(module_name, module_path, ast, block) do
       :none ->
         :none
 
       type ->
-        build_ast(module_name, module_path, type)
+        build_ast(module_name, type)
     end
   end
 
@@ -30,6 +30,7 @@ defmodule Typist.SingleCaseUnionType do
   # deftype ProductCode1 :: String.t()
   defp maybe_type(
          _current_module,
+         module_path,
          {
            :"::",
            _,
@@ -37,7 +38,7 @@ defmodule Typist.SingleCaseUnionType do
          },
          _block
        ) do
-    type(module_name, ast)
+    type(module_name, module_path, ast)
   end
 
   # Data type: single case union type, module, (remote type)
@@ -49,10 +50,11 @@ defmodule Typist.SingleCaseUnionType do
   # end
   defp maybe_type(
          module_name,
+         module_path,
          {{:., _, [_, _]}, _, []} = ast,
          _block
        ) do
-    type(module_name, ast)
+    type(module_name, module_path, ast)
   end
 
   # Data type: single case union type, module, (basic type)"
@@ -64,6 +66,7 @@ defmodule Typist.SingleCaseUnionType do
   # end
   defp maybe_type(
          _module_name,
+         module_path,
          {:"::", _,
           [
             {:__aliases__, _, [module_name]},
@@ -71,7 +74,7 @@ defmodule Typist.SingleCaseUnionType do
           ]},
          _block
        ) do
-    type(module_name, ast)
+    type(module_name, module_path, ast)
   end
 
   # Data type: single case union type, module, (basic type, multi-line AST)
@@ -85,6 +88,7 @@ defmodule Typist.SingleCaseUnionType do
 
   defp maybe_type(
          _module_name,
+         module_path,
          {:"::", _,
           [
             {:__aliases__, _, [module_name]},
@@ -92,16 +96,22 @@ defmodule Typist.SingleCaseUnionType do
           ]},
          _block
        ) do
-    type(module_name, ast)
+    type(module_name, module_path, ast)
   end
 
-  defp maybe_type(_module_name, _ast, _block), do: :none
+  defp maybe_type(_module_name, _module_path, _ast, _block), do: :none
 
-  defp type(module_name, ast) do
+  defp type(module_name, module_path, ast) do
     type = from_ast(ast)
     {_, value} = type
 
-    %Typist.SingleCaseUnionType{name: module_name, type: type, value: value, spec: spec(value)}
+    %Typist.SingleCaseUnionType{
+      name: module_name,
+      module_path: module_path,
+      type: type,
+      value: value,
+      spec: spec(value)
+    }
   end
 
   defp spec(value) do
