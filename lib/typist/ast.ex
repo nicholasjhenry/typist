@@ -27,6 +27,10 @@ defmodule Typist.Ast do
       def __spec__ do
         unquote(Macro.to_string(spec))
       end
+
+      def new(value) do
+        struct!(__MODULE__, value: value)
+      end
     end
   end
 

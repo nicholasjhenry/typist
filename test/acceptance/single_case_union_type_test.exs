@@ -18,8 +18,8 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert ProductCodeFoo.__spec__() == "@type(t :: %__MODULE__{value: String.t()})"
     end
 
-    test "can construct the type" do
-      assert %ProductCodeFoo{value: "ABC123"}
+    test "defines a constructor function" do
+      assert %ProductCodeFoo{value: "ABC123"} == ProductCodeFoo.new("ABC123")
     end
   end
 
@@ -39,8 +39,8 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert ProductCodeBar.__spec__() == "@type(t :: %__MODULE__{value: binary})"
     end
 
-    test "can construct the type" do
-      assert %ProductCodeBar{value: "ABC123"}
+    test "defines a constructor function" do
+      assert %ProductCodeBar{value: "ABC123"} == ProductCodeBar.new("ABC123")
     end
   end
 
@@ -60,8 +60,8 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert ProductCodeBaz.__spec__() == "@type(t :: %__MODULE__{value: (binary -> integer)})"
     end
 
-    test "can construct the type" do
-      assert %ProductCodeBaz{value: fn _string -> 123 end}
+    test "defines a constructor function" do
+      assert %ProductCodeBaz{value: _} = ProductCodeBaz.new(fn _string -> 123 end)
     end
   end
 
@@ -82,8 +82,8 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert {"String.t()", _} = actual_type.type
     end
 
-    test "can construct the type" do
-      assert %ProductCodeQux{value: "ABC123"}
+    test "defines a constructor function" do
+      assert %ProductCodeQux{value: "ABC123"} == ProductCodeQux.new("ABC123")
     end
   end
 end

@@ -19,8 +19,8 @@ defmodule Typist.ProductTypeTest do
       assert FirstLast.__spec__() == "@type(t :: %__MODULE__{value: {String.t(), binary}})"
     end
 
-    test "can be constructed" do
-      assert %FirstLast{value: {"Jane", "Doe"}}
+    test "defines a constructor function" do
+      assert %FirstLast{value: {"Jane", "Doe"}} == FirstLast.new({"Jane", "Doe"})
     end
   end
 
@@ -43,8 +43,8 @@ defmodule Typist.ProductTypeTest do
       assert Foo.FirstLast.__spec__() == "@type(t :: %__MODULE__{value: {String.t(), binary}})"
     end
 
-    test "can be constructed" do
-      assert %Foo.FirstLast{value: {"Jane", "Doe"}}
+    test "defines a constructor function" do
+      assert %Foo.FirstLast{value: {"Jane", "Doe"}} == Foo.FirstLast.new({"Jane", "Doe"})
     end
   end
 end

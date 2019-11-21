@@ -26,8 +26,8 @@ defmodule Typist.DiscriminatedUnionTest do
                "@type(t :: %__MODULE__{value: Nickname.t() | FirstLast.t() | FormalName.t() | binary})"
     end
 
-    test "can be constructed" do
-      assert %Name{value: %Nickname{value: "Jimmy"}}
+    test "defines a constructor function" do
+      assert %Name{value: %Nickname{value: "Jimmy"}} = Name.new(%Nickname{value: "Jimmy"})
     end
   end
 
@@ -55,8 +55,9 @@ defmodule Typist.DiscriminatedUnionTest do
                "@type(t :: %__MODULE__{value: Nickname.t() | FirstLast.t() | FormalName.t()})"
     end
 
-    test "can be constructed" do
-      assert %Foo.Name{value: %Foo.Nickname{value: "Jimmy"}}
+    test "defines a constructor function" do
+      assert %Foo.Name{value: %Foo.Nickname{value: "Jimmy"}} ==
+               Foo.Name.new(%Foo.Nickname{value: "Jimmy"})
     end
   end
 end

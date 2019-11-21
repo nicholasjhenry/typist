@@ -18,20 +18,14 @@ defmodule Typist do
       iex> defmodule Example1 do
       ...>   use Typist
       ...>   deftype ProductCode :: String.t
-      ...>   def product_code(value) do
-      ...>     %Example1.ProductCode{value: value}
-      ...>   end
       ...> end
-      ...> product_code = Example1.product_code("ABC")
+      ...> product_code = Example1.ProductCode.new("ABC")
       ...> product_code.value == "ABC"
       true
 
       iex> defmodule ProductCode do
       ...>   use Typist
       ...>   deftype String.t
-      ...>   def new(value) do
-      ...>     %__MODULE__{value: value}
-      ...>   end
       ...> end
       ...> product_code = ProductCode.new("ABC")
       ...> product_code.value == "ABC"
@@ -43,6 +37,11 @@ defmodule Typist do
         @enforce_keys [:value]
         defstruct [:value]
         @type t :: %__MODULE__{value: String.t()}
+
+        @spec new(String.t) :: t
+        def new(value) do
+          struct!(__MODULE__, value)
+        end
       end
 
   ## Discriminated Union
@@ -53,10 +52,10 @@ defmodule Typist do
   ...>   deftype FirstLast :: {String.t, String.t}
   ...>   deftype Name :: Nickname.t | FirstLast.t
   ...>   def first_last(first, last) do
-  ...>     %Example2.FirstLast{value: {first, last}}
+  ...>     Example2.Name.new({first, last})
   ...>   end
   ...>   def name(value) do
-  ...>     %Example2.Name{value: value}
+  ...>     Example2.Name.new(value)
   ...>   end
   ...> end
   ...> name = Example2.first_last("Steve", "Jobs") |> Example2.name
@@ -69,6 +68,11 @@ defmodule Typist do
         @enforce_keys [:value]
         defstruct value: nil
         @type t :: %__MODULE__{value: Nickname.t | FirstLast.t}
+
+        @spec new(Nickname.t | FirstLast.t) :: t
+        def new(value) do
+          struct!(__MODULE__, value: value)
+        end
       end
 
   ## Record Type
@@ -80,14 +84,12 @@ defmodule Typist do
       ...>     code :: ProductCode.t()
       ...>     price :: integer()
       ...>   end
-      ...>   def product_code(value) do
-      ...>     %Example3.ProductCode{value: value}
-      ...>   end
       ...>   def product(product_code, price) do
       ...>     %Example3.Product{code: product_code, price: price}
       ...>   end
       ...> end
-      ...> product = Example3.product_code("ABC") |> Example3.product(10_00)
+      ...> product_code = Example3.ProductCode.new("ABC")
+      ...> product = Example3.Product.new(%{code: product_code, price: 10_00})
       ...> match?(%{code: %{value: "ABC"}, price: 10_00}, product)
       true
 
@@ -98,14 +100,9 @@ defmodule Typist do
       ...>     code :: ProductCode.t()
       ...>     price :: integer()
       ...>   end
-      ...>   def product_code(value) do
-      ...>     %Product.ProductCode{value: value}
-      ...>   end
-      ...>   def new(product_code, price) do
-      ...>     %Product{code: product_code, price: price}
-      ...>   end
       ...> end
-      ...> product = Product.product_code("ABC") |> Product.new(10_00)
+      ...> product_code = Product.ProductCode.new("ABC")
+      ...> product = Product.new(%{code: product_code, price: 10_00})
       ...> match?(%{code: %{value: "ABC"}, price: 10_00}, product)
       true
 
@@ -115,7 +112,12 @@ defmodule Typist do
         @enforce_keys [:code, :price]
         defstruct [:code, :price]
 
-        @type t :: %__MODULE__{code: ProductCode.t(), price: integer()}
+        @type t :: %__MODULE__{code: ProductCode.t(), price: integer}
+
+        @spec new(%{code: ProductCode.t(), price: integer}) :: t
+        def new(fields) do
+          struct!(__MODULE__, fields)
+        end
       end
   """
 
