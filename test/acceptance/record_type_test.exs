@@ -2,7 +2,7 @@ defmodule Typist.RecordTypeTest do
   use ExUnit.Case
   use Typist
 
-  describe "record type" do
+  describe "defining the type inline" do
     alias Typist.RecordTypeTest.Product
 
     deftype Product do
@@ -10,7 +10,7 @@ defmodule Typist.RecordTypeTest do
       price :: integer
     end
 
-    test "inline" do
+    test "defines the type meta-data" do
       actual_type = Product.__type__()
 
       assert match?(%Typist.RecordType{}, actual_type)
@@ -20,10 +20,14 @@ defmodule Typist.RecordTypeTest do
                %Typist.RecordType.Field{name: :code, type: {"String.t()", _}},
                %Typist.RecordType.Field{name: :price, type: {"integer", _}}
              ] = actual_type.fields
-
-      Product.new(code: "ABC123", price: 10_00)
     end
 
+    test "defines a constructor function" do
+      assert %Product{code: "ABC123", price: 10_00} == Product.new(code: "ABC123", price: 10_00)
+    end
+  end
+
+  describe "defining the type in a module" do
     defmodule Foo.Product do
       deftype do
         code :: String.t()
@@ -31,7 +35,7 @@ defmodule Typist.RecordTypeTest do
       end
     end
 
-    test "module" do
+    test "defines the type meta-data" do
       actual_type = Foo.Product.__type__()
 
       assert match?(%Typist.RecordType{}, actual_type)
@@ -41,8 +45,11 @@ defmodule Typist.RecordTypeTest do
                %Typist.RecordType.Field{name: :code, type: {"String.t()", _}},
                %Typist.RecordType.Field{name: :price, type: {"integer", _}}
              ] = actual_type.fields
+    end
 
-      assert Foo.Product.new(%{code: "ABC123", price: 10_00})
+    test "defines a constructor function" do
+      assert %Foo.Product{code: "ABC123", price: 10_00} ==
+               Foo.Product.new(code: "ABC123", price: 10_00)
     end
   end
 end
