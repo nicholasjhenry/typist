@@ -11,8 +11,8 @@ defmodule Typist.DiscriminatedUnionType do
       deftype Name :: Nickname.t | FirstLast.t
   """
 
-  @enforce_keys [:name, :types, :value, :spec, :module_path]
-  defstruct [:name, :types, :value, :spec, :module_path]
+  @enforce_keys [:name, :types, :value, :spec, :module_path, :defined]
+  defstruct [:name, :types, :value, :spec, :module_path, :defined]
 
   import Typist.{Ast, Utils}
 
@@ -24,13 +24,13 @@ defmodule Typist.DiscriminatedUnionType do
         :none
 
       type ->
-        build_ast(module_name, type)
+        build_ast(type)
     end
   end
 
   # Data type: discriminated union type, module
   defp maybe_type(type_name, module_path, {:|, _, union_types}, _block) do
-    type(type_name, module_path, union_types)
+    type(type_name, module_path, union_types, :module)
   end
 
   # Data type: discriminated union type, inline
@@ -44,18 +44,19 @@ defmodule Typist.DiscriminatedUnionType do
           ]},
          _block
        ) do
-    type(type_name, module_path, union_types)
+    type(type_name, module_path, union_types, :inline)
   end
 
-  defp maybe_type(_module_name, _module_path, _ast, _block), do: :none
+  defp maybe_type(_module_name, _ast, _block, _defined), do: :none
 
-  defp type(type_name, module_path, union_types) do
+  defp type(type_name, module_path, union_types, defined) do
     types = union_types |> Enum.map(&from_ast/1) |> List.flatten()
     value = {:|, [], union_types}
 
     %Typist.DiscriminatedUnionType{
       name: type_name,
       module_path: module_path,
+      defined: defined,
       types: types,
       value: value,
       spec: spec(value)

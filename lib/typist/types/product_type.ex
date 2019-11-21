@@ -12,8 +12,8 @@ defmodule Typist.ProductType do
       deftype Product :: {String.t, integer()}
   """
 
-  @enforce_keys [:name, :type, :value, :spec, :module_path]
-  defstruct [:name, :type, :value, :spec, :module_path]
+  @enforce_keys [:name, :type, :value, :spec, :module_path, :defined]
+  defstruct [:name, :type, :value, :spec, :module_path, :defined]
 
   import Typist.{Ast, Utils}
 
@@ -25,7 +25,7 @@ defmodule Typist.ProductType do
         :none
 
       type ->
-        build_ast(module_name, type)
+        build_ast(type)
     end
   end
 
@@ -38,11 +38,11 @@ defmodule Typist.ProductType do
          {
            :"::",
            _,
-           [{:__aliases__, _, [module_name]}, product_types]
+           [{:__aliases__, _, [type_name]}, product_types]
          },
          _block
        ) do
-    type(module_name, module_path, product_types)
+    type(type_name, module_path, product_types, :inline)
   end
 
   # Data type: product type, module
@@ -52,22 +52,23 @@ defmodule Typist.ProductType do
   #
   #   deftype {String.t(), String.t()}
   # end
-  defp maybe_type(module_name, module_path, product_types, _block) do
-    type(module_name, module_path, product_types)
+  defp maybe_type(type_name, module_path, product_types, _block) do
+    type(type_name, module_path, product_types, :module)
   end
 
   # def maybe_type(_module_name, _ast), do: :none
 
-  defp type(module_name, module_path, product_types) do
+  defp type(type_name, module_path, product_types, defined) do
     type = from_ast(product_types)
     {_, value} = type
 
     %Typist.ProductType{
-      name: module_name,
+      name: type_name,
       module_path: module_path,
       type: type,
       value: value,
-      spec: spec(value)
+      spec: spec(value),
+      defined: defined
     }
   end
 
