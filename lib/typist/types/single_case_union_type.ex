@@ -53,7 +53,7 @@ defmodule Typist.SingleCaseUnionType do
          type_name,
          module_path,
          {{:., _, [_, _]}, _, []} = ast,
-         _block
+         _block = :none
        ) do
     type(type_name, module_path, ast, :module)
   end
@@ -69,7 +69,7 @@ defmodule Typist.SingleCaseUnionType do
             {:__aliases__, _, [type_name]},
             {_basic_type, _, nil} = ast
           ]},
-         _block
+         _block = :none
        ) do
     type(type_name, module_path, ast, :inline)
   end
@@ -92,7 +92,7 @@ defmodule Typist.SingleCaseUnionType do
             {:__aliases__, _, [type_name]},
             [_] = ast
           ]},
-         _block
+         _block = :none
        ) do
     type(type_name, module_path, ast, :inline)
   end

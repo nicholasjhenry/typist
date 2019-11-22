@@ -27,7 +27,7 @@ defmodule Typist.DiscriminatedUnionType do
   end
 
   # Data type: discriminated union type, module
-  defp maybe_type(type_name, module_path, {:|, _, _} = ast, _block) do
+  defp maybe_type(type_name, module_path, {:|, _, _} = ast, _block = :none) do
     type(type_name, module_path, ast, :module)
   end
 
@@ -40,7 +40,7 @@ defmodule Typist.DiscriminatedUnionType do
             {:__aliases__, _, [type_name]},
             {:|, _, _} = ast
           ]},
-         _block
+         _block = :none
        ) do
     type(type_name, module_path, ast, :inline)
   end
