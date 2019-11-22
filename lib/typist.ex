@@ -145,13 +145,23 @@ defmodule Typist do
     maybe_build(__CALLER__.module, ast, :none)
   end
 
-  defp maybe_build(module, ast, block) do
+  @doc false
+  def maybe_build(module, ast, block) do
     RecordType.maybe_build(module, ast, block)
     |> if_none(&SingleCaseUnionType.build(module, ast, &1))
     |> if_none(&DiscriminatedUnionType.build(module, ast, &1))
     |> if_none(&ProductType.build(module, ast, &1))
+    |> if_none(&handle_missing_type/1)
   end
 
   defp if_none(:none, func), do: func.(:none)
   defp if_none(result, _func), do: result
+
+  defmodule InvalidTypeDefinition do
+    defexception message: "Type definition invalid"
+  end
+
+  defp handle_missing_type(:none) do
+    raise InvalidTypeDefinition
+  end
 end
