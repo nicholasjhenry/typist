@@ -38,7 +38,12 @@ defmodule Typist.Ast do
         wrapper.value
       end
 
-      defoverridable new: 1, value: 1
+      @spec apply(t, (unquote(type.ast) -> any)) :: any
+      def apply(%__MODULE__{} = wrapper, func) do
+        func.(wrapper.value)
+      end
+
+      defoverridable new: 1, value: 1, apply: 2
     end
   end
 end

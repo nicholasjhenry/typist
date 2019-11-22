@@ -76,4 +76,12 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert "ABC123" == ProductCodeFoo.value(product_code)
     end
   end
+
+  describe "applying" do
+    test "applies the function to the unwrapped value" do
+      product_code = ProductCodeFoo.new("ABC123")
+      func = fn value -> "value is #{value}" end
+      assert "value is ABC123" == ProductCodeFoo.apply(product_code, func)
+    end
+  end
 end
