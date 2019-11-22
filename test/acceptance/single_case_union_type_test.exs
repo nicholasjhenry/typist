@@ -2,9 +2,9 @@ defmodule Typist.SingleCaseUnionTypeTest do
   use ExUnit.Case
   use Typist
 
-  describe "defining a type inline as an alias for an Elixir remote type" do
-    deftype ProductCodeFoo :: String.t()
+  deftype ProductCodeFoo :: String.t()
 
+  describe "defining a type inline as an alias for an Elixir remote type" do
     test "defines the type meta-data" do
       actual_type = ProductCodeFoo.__type__()
 
@@ -67,6 +67,13 @@ defmodule Typist.SingleCaseUnionTypeTest do
 
     test "defines a constructor function" do
       assert %ProductCodeQux{value: "ABC123"} == ProductCodeQux.new("ABC123")
+    end
+  end
+
+  describe "unwrapping" do
+    test "returns the wrapped value" do
+      product_code = ProductCodeFoo.new("ABC123")
+      assert "ABC123" == ProductCodeFoo.value(product_code)
     end
   end
 end

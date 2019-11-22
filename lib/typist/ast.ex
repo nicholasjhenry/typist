@@ -33,7 +33,12 @@ defmodule Typist.Ast do
         struct!(__MODULE__, value: value)
       end
 
-      defoverridable new: 1
+      @spec value(t) :: unquote(type.ast)
+      def value(%__MODULE__{} = wrapper) do
+        wrapper.value
+      end
+
+      defoverridable new: 1, value: 1
     end
   end
 end
