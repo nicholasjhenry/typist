@@ -147,7 +147,7 @@ defmodule Typist.RecordType do
 
       @spec new(%{unquote_splicing(type.ast)}) :: t
       def new(fields) do
-        struct(__MODULE__, fields)
+        struct!(__MODULE__, fields)
       end
     end
   end
