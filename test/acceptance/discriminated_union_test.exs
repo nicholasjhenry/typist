@@ -3,8 +3,6 @@ defmodule Typist.DiscriminatedUnionTest do
   use Typist
 
   describe "defining the type inline" do
-    alias Typist.DiscriminatedUnionTest.{Nickname, Name}
-
     deftype FormalName :: String.t()
     deftype Nickname :: String.t()
     deftype FirstLast :: {String.t(), String.t()}

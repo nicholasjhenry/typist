@@ -120,8 +120,13 @@ defmodule Typist.RecordType do
         do_build_ast(type)
 
       :inline ->
+        new_module_path = Module.concat([type.module_path, type.name])
+
         quote do
-          defmodule unquote(Module.concat([type.module_path, type.name])) do
+          # Ensure the module name is available in the namespace it was defined.
+          alias unquote(new_module_path)
+
+          defmodule unquote(new_module_path) do
             unquote(do_build_ast(type))
           end
         end

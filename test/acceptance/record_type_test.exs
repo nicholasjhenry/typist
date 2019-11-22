@@ -3,8 +3,6 @@ defmodule Typist.RecordTypeTest do
   use Typist
 
   describe "defining the type inline" do
-    alias Typist.RecordTypeTest.Product
-
     deftype Product do
       code :: String.t()
       price :: integer

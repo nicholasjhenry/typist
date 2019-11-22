@@ -3,8 +3,6 @@ defmodule Typist.ProductTypeTest do
   use Typist
 
   describe "defining the type inline" do
-    alias Typist.ProductTypeTest.FirstLast
-
     deftype FirstLast :: {String.t(), binary}
 
     test "defines the type meta-data" do

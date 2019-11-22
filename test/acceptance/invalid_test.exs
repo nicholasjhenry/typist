@@ -1,6 +1,5 @@
 defmodule Typist.InvalidTest do
   use ExUnit.Case
-  use Typist
 
   test "invalid type definition raises an exception" do
     invalid_ast =

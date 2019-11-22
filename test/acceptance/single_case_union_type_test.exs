@@ -3,7 +3,6 @@ defmodule Typist.SingleCaseUnionTypeTest do
   use Typist
 
   describe "defining a type inline as an alias for an Elixir remote type" do
-    alias Typist.SingleCaseUnionTypeTest.ProductCodeFoo
     deftype ProductCodeFoo :: String.t()
 
     test "defines the type meta-data" do
@@ -20,7 +19,6 @@ defmodule Typist.SingleCaseUnionTypeTest do
   end
 
   describe "defining a type inline as an alias for a basic type" do
-    alias Typist.SingleCaseUnionTypeTest.ProductCodeBar
     deftype ProductCodeBar :: binary
 
     test "defines the type meta-data" do
@@ -37,7 +35,6 @@ defmodule Typist.SingleCaseUnionTypeTest do
   end
 
   describe "defining a type inline for a function" do
-    alias Typist.SingleCaseUnionTypeTest.ProductCodeBaz
     deftype ProductCodeBaz :: (binary -> integer)
 
     test "defines the type meta-data" do
@@ -54,8 +51,6 @@ defmodule Typist.SingleCaseUnionTypeTest do
   end
 
   describe "defining a type in a module" do
-    alias Typist.SingleCaseUnionTypeTest.ProductCodeQux
-
     defmodule ProductCodeQux do
       use Typist
 
