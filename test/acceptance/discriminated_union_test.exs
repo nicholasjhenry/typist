@@ -16,11 +16,11 @@ defmodule Typist.DiscriminatedUnionTest do
       assert :Name == actual_type.name
 
       assert actual_type.spec() ==
-               "@type(t :: %__MODULE__{value: Nickname.t() | FirstLast.t() | FormalName.t() | binary})"
+               "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t() | binary)"
     end
 
     test "defines a constructor function" do
-      assert %Name{value: %Nickname{value: "Jimmy"}} = Name.new(%Nickname{value: "Jimmy"})
+      assert %Nickname{value: "Jimmy"} = Name.new(%Nickname{value: "Jimmy"})
     end
   end
 
@@ -40,12 +40,11 @@ defmodule Typist.DiscriminatedUnionTest do
       assert :Name == actual_type.name
 
       assert actual_type.spec ==
-               "@type(t :: %__MODULE__{value: Nickname.t() | FirstLast.t() | FormalName.t()})"
+               "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t())"
     end
 
     test "defines a constructor function" do
-      assert %Foo.Name{value: %Foo.Nickname{value: "Jimmy"}} ==
-               Foo.Name.new(%Foo.Nickname{value: "Jimmy"})
+      assert %Foo.Nickname{value: "Jimmy"} == Foo.Name.new(%Foo.Nickname{value: "Jimmy"})
     end
   end
 end

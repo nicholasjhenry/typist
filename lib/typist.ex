@@ -58,20 +58,19 @@ defmodule Typist do
   ...>     Example2.Name.new(value)
   ...>   end
   ...> end
-  ...> name = Example2.first_last("Steve", "Jobs") |> Example2.name
-  ...> {"Steve", "Jobs"} == name.value.value
-  true
+  ...> Example2.first_last("Steve", "Jobs") |> Example2.name
+  {"Steve", "Jobs"}
 
   Example translate to:
 
       defmodule Name do
         @enforce_keys [:value]
         defstruct value: nil
-        @type t :: %__MODULE__{value: Nickname.t | FirstLast.t}
+        @type t :: Nickname.t | FirstLast.t
 
         @spec new(Nickname.t | FirstLast.t) :: t
         def new(value) do
-          struct!(__MODULE__, value: value)
+          value
         end
       end
 
