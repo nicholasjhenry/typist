@@ -32,6 +32,8 @@ defmodule Typist.Ast do
       def new(value) do
         struct!(__MODULE__, value: value)
       end
+
+      defoverridable new: 1
     end
   end
 end

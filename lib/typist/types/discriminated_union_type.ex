@@ -97,6 +97,8 @@ defmodule Typist.DiscriminatedUnionType do
 
       @spec new(unquote(type.ast)) :: t
       def new(value), do: value
+
+      defoverridable new: 1
     end
   end
 end

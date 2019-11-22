@@ -149,6 +149,8 @@ defmodule Typist.RecordType do
       def new(fields) do
         struct!(__MODULE__, fields)
       end
+
+      defoverridable new: 1
     end
   end
 end
