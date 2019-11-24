@@ -84,4 +84,13 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert "value is ABC123" == ProductCodeFoo.apply(product_code, func)
     end
   end
+
+  describe "definig a remote alias for a remote type" do
+    deftype EmailOnly.t() :: EmailContactInfo.t()
+
+    test "defines the remote alias" do
+      actual_type = EmailOnly.__type__()
+      assert actual_type.spec == "@type(t :: %__MODULE__{value: EmailContactInfo.t()})"
+    end
+  end
 end

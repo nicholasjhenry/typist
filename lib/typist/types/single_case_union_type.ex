@@ -97,7 +97,30 @@ defmodule Typist.SingleCaseUnionType do
     type(type_name, module_path, ast, :inline)
   end
 
-  defp maybe_type(_module_name, _module_path, _ast, _block), do: :none
+  # Remote alias for a remote type
+  # deftype EmailOnly.t() :: EmailContactInfo.t()
+  defp maybe_type(
+         _module_name,
+         module_path,
+         {:"::", _,
+          [
+            {{:., _,
+              [
+                {:__aliases__, _, [type_name]},
+                :t
+              ]}, _, []},
+            {{:., _,
+              [
+                {:__aliases__, _, [_existing_type]},
+                :t
+              ]}, _, []} = ast
+          ]},
+         :none
+       ) do
+    type(type_name, module_path, ast, :inline)
+  end
+
+  defp maybe_type(_module_name, _module_path, _ast, :none), do: :none
 
   defp type(module_name, module_path, ast, defined) do
     %Typist.SingleCaseUnionType{
