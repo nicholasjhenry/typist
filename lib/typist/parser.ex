@@ -10,6 +10,14 @@ defmodule Typist.Parser do
     end
   end
 
+  defp perform({:__block__, _, fields_ast}) when is_list(fields_ast) do
+    Enum.map(fields_ast, &fields/1) |> List.to_tuple()
+  end
+
+  defp fields({:"::", [], [{key, _, _}, type_ast]}) do
+    {key, perform(type_ast)}
+  end
+
   # Alias within a Union
   defp perform(
          {:"::", _,
@@ -87,7 +95,8 @@ defmodule Typist.Parser do
   end
 
   # Handle basic types
-  defp perform({type, _, _}) when type in [:boolean, :integer, :term, :any, :number, :pid] do
+  defp perform({type, _, _})
+       when type in [:boolean, :integer, :term, :any, :number, :pid, :binary] do
     type
   end
 

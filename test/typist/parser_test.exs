@@ -118,4 +118,66 @@ defmodule Typist.ParserTest do
       assert result == {{:"::", [], [{:Qux, :t}, :integer]}, {:Bar, :t}}
     end
   end
+
+  describe "record types" do
+    test "fields with basic types" do
+      ast =
+        quote do
+          code :: binary
+          price :: integer
+        end
+
+      result = Parser.parse(ast)
+
+      assert result == {{:code, :binary}, {:price, :integer}}
+    end
+
+    test "fields with remote types" do
+      ast =
+        quote do
+          code :: Foo.t()
+          price :: integer
+        end
+
+      result = Parser.parse(ast)
+
+      assert result == {{:code, {:Foo, :t}}, {:price, :integer}}
+    end
+
+    test "fields with product types" do
+      ast =
+        quote do
+          code :: {integer, boolean}
+          price :: integer
+        end
+
+      result = Parser.parse(ast)
+
+      assert result == {{:code, {:integer, :boolean}}, {:price, :integer}}
+    end
+
+    test "fields with union types" do
+      ast =
+        quote do
+          code :: integer | boolean
+          price :: integer
+        end
+
+      result = Parser.parse(ast)
+
+      assert result == {{:code, {:|, [], [:integer, :boolean]}}, {:price, :integer}}
+    end
+
+    test "fields with union Remote types" do
+      ast =
+        quote do
+          code :: Foo.t() | boolean
+          price :: integer
+        end
+
+      result = Parser.parse(ast)
+
+      assert result == {{:code, {:|, [], [{:Foo, :t}, :boolean]}}, {:price, :integer}}
+    end
+  end
 end
