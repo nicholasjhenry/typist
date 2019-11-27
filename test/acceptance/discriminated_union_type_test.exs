@@ -39,4 +39,31 @@ defmodule Typist.DiscriminatedUnionTypeTest do
                {:|, [], [{:Nickname, :t}, {:|, [], [FirstLast: :t, FormalName: :t]}]}
     end
   end
+
+  describe "defining multiple inline remote aliases" do
+    deftype ContactInfo do
+      EmailOnly ::
+        EmailContactInfo.t() | PostOnly ::
+        PostContactInfo.t() | EmailAndPost :: {EmailContactInfo.t(), PostalContactInfo.t()}
+    end
+
+    test "defines the remote alias" do
+      metadata = ContactInfo.__type__()
+
+      assert metadata.ast ==
+               {:|,
+                [
+                  {:"::", [], [EmailOnly: :t, EmailContactInfo: :t]},
+                  {:|, [],
+                   [
+                     {:"::", [PostOnly: :t, PostContactInfo: :t]},
+                     {:"::", [],
+                      [
+                        {:EmailAndPost, :t},
+                        {{:EmailContactInfo, :t}, {:PostalContactInfo, :t}}
+                      ]}
+                   ]}
+                ]}
+    end
+  end
 end
