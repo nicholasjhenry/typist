@@ -2,8 +2,8 @@ defmodule Typist.Parser do
   def parse(ast) do
     case perform(ast) do
       # Apply any remaining param to the function
-      {foo, {function, _metadata, [param]}} ->
-        {function, [], [param, foo]}
+      {param_2, {:|, _metadata, [param_1]}} ->
+        {:|, [], [param_1, param_2]}
 
       type ->
         type
@@ -12,10 +12,6 @@ defmodule Typist.Parser do
 
   defp perform({:__block__, _, fields_ast}) when is_list(fields_ast) do
     Enum.map(fields_ast, &fields/1) |> List.to_tuple()
-  end
-
-  defp fields({:"::", [], [{key, _, _}, type_ast]}) do
-    {key, perform(type_ast)}
   end
 
   # Alias within a Union
@@ -48,11 +44,11 @@ defmodule Typist.Parser do
   end
 
   # e.g. Handle a mix of union types, e.g. integer | boolean | any | Foo.t() :: number | Bar.t() :: term
-  defp perform({:"::", [], [{:|, [], [param_1_ast, param_2_ast]}, remaining_ast]}) do
+  defp perform({:"::", _, [{:|, _, [param_1_ast, param_2_ast]}, remaining_ast]}) do
     perform(param_2_ast, param_1_ast, remaining_ast)
   end
 
-  defp perform({:|, [], args}) do
+  defp perform({:|, _, args}) do
     args = Enum.map(args, &perform(&1))
     {:|, [], args}
   end
@@ -83,15 +79,18 @@ defmodule Typist.Parser do
   end
 
   # Handle aliasing e.g. Foo.t() :: integer
-  defp perform({:"::", [], [{{:., [], [{:__aliases__, _, [_]}, :t]}, [], []}, _] = args}) do
+  defp perform({:"::", _, [{{:., _, [{:__aliases__, _, [_]}, :t]}, _, _}, _] = args}) do
     args = Enum.map(args, &perform(&1))
     {:"::", [], args}
   end
 
   # Handle an alias, e.g. Foo.t()
-  defp perform({{:., _, [{:__aliases__, _alias_metadata, [module_name]}, :t]}, _, _}) do
-    # [alias: false]
+  defp perform({{:., _, [{:__aliases__, _metadata, [module_name]}, :t]}, _, _}) do
     {module_name, :t}
+  end
+
+  defp perform([{:->, _, [input, output]}]) do
+    {:->, [], [Enum.map(input, &perform/1)], perform(output)}
   end
 
   # Handle basic types
@@ -145,5 +144,9 @@ defmodule Typist.Parser do
     param_2 = {:|, [], [foo, second_param]}
 
     {:|, [], [param_1, param_2]}
+  end
+
+  defp fields({:"::", _, [{key, _, _}, type_ast]}) do
+    {key, perform(type_ast)}
   end
 end

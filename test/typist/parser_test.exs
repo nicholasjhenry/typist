@@ -4,6 +4,17 @@ defmodule Typist.ParserTest do
   alias Typist.Parser
 
   describe "parsing discriminiated unions" do
+    test "simple" do
+      ast =
+        quote do
+          integer
+        end
+
+      result = Parser.parse(ast)
+
+      assert result == :integer
+    end
+
     test "simple union remote type" do
       ast =
         quote do
@@ -13,6 +24,28 @@ defmodule Typist.ParserTest do
       result = Parser.parse(ast)
 
       assert result == {:"::", [], [{:Qux, :t}, :integer]}
+    end
+
+    test "simple union remote type alias a remote type" do
+      ast =
+        quote do
+          Qux.t() :: String.t()
+        end
+
+      result = Parser.parse(ast)
+
+      assert result == {:"::", [], [{:Qux, :t}, {:String, :t}]}
+    end
+
+    test "simple union remote type for a function" do
+      ast =
+        quote do
+          Qux.t() :: (binary -> integer)
+        end
+
+      result = Parser.parse(ast)
+
+      assert result == {:"::", [], [{:Qux, :t}, {:->, [], [[:binary]], :integer}]}
     end
 
     test "mutiple remote types" do
@@ -27,7 +60,11 @@ defmodule Typist.ParserTest do
                {:|,
                 [
                   {:"::", [], [{:Qux, :t}, :integer]},
-                  {:|, [], [{:"::", [{:Baz, :t}, :boolean]}, {:"::", [], [{:Zoo, :t}, :term]}]}
+                  {:|, [],
+                   [
+                     {:"::", [{:Baz, :t}, :boolean]},
+                     {:"::", [], [{:Zoo, :t}, :term]}
+                   ]}
                 ]}
     end
 
@@ -54,7 +91,11 @@ defmodule Typist.ParserTest do
                {:|, [],
                 [
                   :integer,
-                  {:|, [], [{:"::", [{:Foo, :t}, :boolean]}, {:"::", [], [{:Bar, :t}, :term]}]}
+                  {:|, [],
+                   [
+                     {:"::", [{:Foo, :t}, :boolean]},
+                     {:"::", [], [{:Bar, :t}, :term]}
+                   ]}
                 ]}
     end
 
@@ -77,7 +118,10 @@ defmodule Typist.ParserTest do
                       [
                         :any,
                         {:|, [],
-                         [{:"::", [], [{:Foo, :t}, :number]}, {:"::", [], [{:Bar, :t}, :term]}]}
+                         [
+                           {:"::", [], [{:Foo, :t}, :number]},
+                           {:"::", [], [{:Bar, :t}, :term]}
+                         ]}
                       ]}
                    ]}
                 ]}
@@ -115,7 +159,8 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {{:"::", [], [{:Qux, :t}, :integer]}, {:Bar, :t}}
+      assert result ==
+               {{:"::", [], [{:Qux, :t}, :integer]}, {:Bar, :t}}
     end
   end
 
@@ -177,7 +222,8 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {{:code, {:|, [], [{:Foo, :t}, :boolean]}}, {:price, :integer}}
+      assert result ==
+               {{:code, {:|, [], [{:Foo, :t}, :boolean]}}, {:price, :integer}}
     end
   end
 end
