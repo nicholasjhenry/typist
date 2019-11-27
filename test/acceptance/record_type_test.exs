@@ -12,6 +12,7 @@ defmodule Typist.RecordTypeTest do
       metadata = Product.__type__()
 
       assert metadata.ast == {:record, [], [{:code, {:String, :t}}, {:price, :integer}]}
+      assert metadata.spec == "@type(t :: %__MODULE__{code: String.t(), price: integer})"
     end
   end
 
@@ -27,6 +28,7 @@ defmodule Typist.RecordTypeTest do
       metadata = Foo.Product.__type__()
 
       assert metadata.ast == {:record, [], [{:code, {:String, :t}}, {:price, :integer}]}
+      assert metadata.spec == "@type(t :: %__MODULE__{code: String.t(), price: integer})"
     end
   end
 end

@@ -10,6 +10,7 @@ defmodule Typist.Parser do
     end
   end
 
+  # Generate AST for record
   defp perform({:__block__, _, fields_ast}) when is_list(fields_ast) do
     {:record, [], Enum.map(fields_ast, &fields/1)}
   end

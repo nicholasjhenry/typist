@@ -20,6 +20,9 @@ defmodule Typist.DiscriminatedUnionTypeTest do
                   {:Nickname, :t},
                   {:|, [], [{:FirstLast, :t}, {:|, [], [{:FormalName, :t}, :binary]}]}
                 ]}
+
+      assert metadata.spec ==
+               "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t() | binary)"
     end
   end
 
@@ -37,6 +40,9 @@ defmodule Typist.DiscriminatedUnionTypeTest do
 
       assert metadata.ast ==
                {:|, [], [{:Nickname, :t}, {:|, [], [FirstLast: :t, FormalName: :t]}]}
+
+      assert metadata.spec ==
+               "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t())"
     end
   end
 
@@ -65,7 +71,9 @@ defmodule Typist.DiscriminatedUnionTypeTest do
                    ]}
                 ]}
 
-      EmailOnly.__type__()
+      assert metadata.spec == "@type(t :: EmailOnly.t() | PostOnly.t() | EmailAndPost.t())"
+
+      assert EmailOnly.__type__()
     end
   end
 end
