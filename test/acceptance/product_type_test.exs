@@ -8,7 +8,7 @@ defmodule Typist.ProductTypeTest do
     test "defines the type meta-data" do
       metadata = FirstLast.__type__()
 
-      assert metadata.ast == {{:String, :t}, :integer}
+      assert metadata.ast == {:product, [], [{:String, :t}, :integer]}
     end
   end
 
@@ -22,7 +22,7 @@ defmodule Typist.ProductTypeTest do
     test "defines the type meta-data" do
       metadata = Foo.FirstLast.__type__()
 
-      assert metadata.ast == {{:String, :t}, :integer}
+      assert metadata.ast == {:product, [], [{:String, :t}, :integer]}
     end
   end
 end

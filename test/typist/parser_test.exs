@@ -57,12 +57,12 @@ defmodule Typist.ParserTest do
       result = Parser.parse(ast)
 
       assert result ==
-               {:|,
+               {:|, [],
                 [
                   {:"::", [], [{:Qux, :t}, :integer]},
                   {:|, [],
                    [
-                     {:"::", [{:Baz, :t}, :boolean]},
+                     {:"::", [], [{:Baz, :t}, :boolean]},
                      {:"::", [], [{:Zoo, :t}, :term]}
                    ]}
                 ]}
@@ -93,7 +93,7 @@ defmodule Typist.ParserTest do
                   :integer,
                   {:|, [],
                    [
-                     {:"::", [{:Foo, :t}, :boolean]},
+                     {:"::", [], [{:Foo, :t}, :boolean]},
                      {:"::", [], [{:Bar, :t}, :term]}
                    ]}
                 ]}
@@ -137,7 +137,7 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {:integer, :boolean}
+      assert result == {:product, [], [:integer, :boolean]}
     end
 
     test "simple with remote types" do
@@ -148,7 +148,7 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {{:Qux, :t}, {:Bar, :t}}
+      assert result == {:product, [], [{:Qux, :t}, {:Bar, :t}]}
     end
 
     test "simple with remote types aliasing" do
@@ -160,7 +160,7 @@ defmodule Typist.ParserTest do
       result = Parser.parse(ast)
 
       assert result ==
-               {{:"::", [], [{:Qux, :t}, :integer]}, {:Bar, :t}}
+               {:product, [], [{:"::", [], [{:Qux, :t}, :integer]}, {:Bar, :t}]}
     end
   end
 
@@ -174,7 +174,7 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {{:code, :binary}, {:price, :integer}}
+      assert result == {:record, [], [{:code, :binary}, {:price, :integer}]}
     end
 
     test "fields with remote types" do
@@ -186,7 +186,7 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {{:code, {:Foo, :t}}, {:price, :integer}}
+      assert result == {:record, [], [{:code, {:Foo, :t}}, {:price, :integer}]}
     end
 
     test "fields with product types" do
@@ -198,7 +198,8 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {{:code, {:integer, :boolean}}, {:price, :integer}}
+      assert result ==
+               {:record, [], [{:code, {:product, [], [:integer, :boolean]}}, {:price, :integer}]}
     end
 
     test "fields with union types" do
@@ -210,7 +211,8 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {{:code, {:|, [], [:integer, :boolean]}}, {:price, :integer}}
+      assert result ==
+               {:record, [], [{:code, {:|, [], [:integer, :boolean]}}, {:price, :integer}]}
     end
 
     test "fields with union Remote types" do
@@ -223,7 +225,7 @@ defmodule Typist.ParserTest do
       result = Parser.parse(ast)
 
       assert result ==
-               {{:code, {:|, [], [{:Foo, :t}, :boolean]}}, {:price, :integer}}
+               {:record, [], [{:code, {:|, [], [{:Foo, :t}, :boolean]}}, {:price, :integer}]}
     end
   end
 end

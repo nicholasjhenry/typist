@@ -11,7 +11,7 @@ defmodule Typist.Parser do
   end
 
   defp perform({:__block__, _, fields_ast}) when is_list(fields_ast) do
-    Enum.map(fields_ast, &fields/1) |> List.to_tuple()
+    {:record, [], Enum.map(fields_ast, &fields/1)}
   end
 
   # Alias within a Union
@@ -34,7 +34,7 @@ defmodule Typist.Parser do
     case perform(remaining_ast) do
       {second_param, {:|, _, [current_aliased_type]}} ->
         {
-          {:|, [], [{:"::", [alias_type, current_aliased_type]}, second_param]},
+          {:|, [], [{:"::", [], [alias_type, current_aliased_type]}, second_param]},
           {:|, [], [previous_aliased_type]}
         }
 
@@ -64,14 +64,14 @@ defmodule Typist.Parser do
 
     case perform(remaining_ast) do
       {second_param, {:|, _, [aliased_type]}} ->
-        {:|,
+        {:|, [],
          [
            {:"::", [], [alias_type, aliased_type]},
            second_param
          ]}
 
       second_param ->
-        {:|,
+        {:|, [],
          [
            {:"::", [], [alias_type, second_param]}
          ]}
@@ -106,10 +106,12 @@ defmodule Typist.Parser do
 
   # Handle product type, e.g. {integer, Foo.t(), boolean}
   defp perform(product_type) when is_tuple(product_type) do
-    product_type
-    |> Tuple.to_list()
-    |> Enum.map(&perform/1)
-    |> List.to_tuple()
+    params =
+      product_type
+      |> Tuple.to_list()
+      |> Enum.map(&perform/1)
+
+    {:product, [], params}
   end
 
   # Handle aliasing in Union types

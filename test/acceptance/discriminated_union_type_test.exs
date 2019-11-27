@@ -51,19 +51,21 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       metadata = ContactInfo.__type__()
 
       assert metadata.ast ==
-               {:|,
+               {:|, [],
                 [
                   {:"::", [], [EmailOnly: :t, EmailContactInfo: :t]},
                   {:|, [],
                    [
-                     {:"::", [PostOnly: :t, PostContactInfo: :t]},
+                     {:"::", [], [PostOnly: :t, PostContactInfo: :t]},
                      {:"::", [],
                       [
                         {:EmailAndPost, :t},
-                        {{:EmailContactInfo, :t}, {:PostalContactInfo, :t}}
+                        {:product, [], [{:EmailContactInfo, :t}, {:PostalContactInfo, :t}]}
                       ]}
                    ]}
                 ]}
+
+      EmailOnly.__type__()
     end
   end
 end

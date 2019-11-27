@@ -4,6 +4,10 @@ defmodule Typist do
   """
   alias Typist.{Generator, Parser}
 
+  defmodule Metadata do
+    defstruct ast: nil, calling_module: nil, remaining_ast: nil, code: []
+  end
+
   defmacro __using__(_opts \\ []) do
     quote do
       import Typist
@@ -28,15 +32,23 @@ defmodule Typist do
   defp type(calling_module, module_ast, block_ast) do
     module = Parser.parse(module_ast)
     fields = Parser.parse(block_ast)
-    metadata = %{ast: fields}
+    metadata = %Metadata{ast: fields, calling_module: calling_module, remaining_ast: fields}
 
-    Generator.build(calling_module, module, metadata)
+    code = Generator.build(module, metadata, [])
+
+    quote do
+      unquote({:__block__, [], code})
+    end
   end
 
   defp type(calling_module, ast) do
     ast = Parser.parse(ast)
-    metadata = %{ast: ast}
+    metadata = %Metadata{ast: ast, calling_module: calling_module, remaining_ast: ast}
 
-    Generator.build(calling_module, metadata)
+    code = Generator.build(metadata, [])
+
+    quote do
+      unquote({:__block__, [], code})
+    end
   end
 end
