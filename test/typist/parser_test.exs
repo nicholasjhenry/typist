@@ -18,7 +18,7 @@ defmodule Typist.ParserTest do
     test "simple union remote type" do
       ast =
         quote do
-          Qux.t() :: integer
+          Qux :: integer
         end
 
       result = Parser.parse(ast)
@@ -29,7 +29,7 @@ defmodule Typist.ParserTest do
     test "simple union remote type alias a remote type" do
       ast =
         quote do
-          Qux.t() :: String.t()
+          Qux :: String.t()
         end
 
       result = Parser.parse(ast)
@@ -40,7 +40,7 @@ defmodule Typist.ParserTest do
     test "simple union remote type for a function" do
       ast =
         quote do
-          Qux.t() :: (binary -> integer)
+          Qux :: (binary -> integer)
         end
 
       result = Parser.parse(ast)
@@ -51,7 +51,7 @@ defmodule Typist.ParserTest do
     test "mutiple remote types" do
       ast =
         quote do
-          Qux.t() :: integer | Baz.t() :: boolean | Zoo.t() :: term
+          Qux :: integer | Baz :: boolean | Zoo :: term
         end
 
       result = Parser.parse(ast)
@@ -82,7 +82,7 @@ defmodule Typist.ParserTest do
     test "mixed types" do
       ast =
         quote do
-          integer | Foo.t() :: boolean | Bar.t() :: term
+          integer | Foo :: boolean | Bar :: term
         end
 
       result = Parser.parse(ast)
@@ -102,7 +102,7 @@ defmodule Typist.ParserTest do
     test "more mixed types" do
       ast =
         quote do
-          integer | boolean | any | Foo.t() :: number | Bar.t() :: term
+          integer | boolean | any | Foo :: number | Bar :: term
         end
 
       result = Parser.parse(ast)
@@ -154,7 +154,7 @@ defmodule Typist.ParserTest do
     test "simple with remote types aliasing" do
       ast =
         quote do
-          {Qux.t() :: integer, Bar.t()}
+          {Qux :: integer, Bar.t()}
         end
 
       result = Parser.parse(ast)

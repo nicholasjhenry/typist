@@ -21,14 +21,14 @@ defmodule Typist.Parser do
             {:|, _,
              [
                previous_aliased_type_ast,
-               {{:., _, [{:__aliases__, __meta_data, [_module_name]}, :t]}, _, _} = alias_type_ast
+               {:__aliases__, __meta_data, [_module_name]} = alias_type_ast
              ]},
             remaining_ast
           ]}
        ) do
     # e.g. {:integer, [], MyApp}
     previous_aliased_type = perform(previous_aliased_type_ast)
-    # e.g. {{:., [], [{:__aliases__, [alias: false], [:Baz]}, :t]}, [], []}
+    # e.g. {:__aliases__, [alias: false], [:Baz]}
     alias_type = perform(alias_type_ast)
 
     case perform(remaining_ast) do
@@ -56,7 +56,7 @@ defmodule Typist.Parser do
   defp perform(
          {:"::", _,
           [
-            {{:., _, [{:__aliases__, __meta_data, [_module_name]}, :t]}, _, _} = alias_type_ast,
+            {:__aliases__, __meta_data, [_module_name]} = alias_type_ast,
             {:"::", _, _} = remaining_ast
           ]}
        ) do
@@ -79,13 +79,18 @@ defmodule Typist.Parser do
   end
 
   # Handle aliasing e.g. Foo.t() :: integer
-  defp perform({:"::", _, [{{:., _, [{:__aliases__, _, [_]}, :t]}, _, _}, _] = args}) do
+  defp perform({:"::", _, [{:__aliases__, _, [_]}, _] = args}) do
     args = Enum.map(args, &perform(&1))
     {:"::", [], args}
   end
 
   # Handle an alias, e.g. Foo.t()
   defp perform({{:., _, [{:__aliases__, _metadata, [module_name]}, :t]}, _, _}) do
+    {module_name, :t}
+  end
+
+  # Handle an alias, e.g. Foo
+  defp perform({:__aliases__, _metadata, [module_name]}) do
     {module_name, :t}
   end
 
@@ -113,7 +118,7 @@ defmodule Typist.Parser do
          {:|, _,
           [
             param_1_ast,
-            {{:., _, [{:__aliases__, _, [_module_name]}, :t]}, [], []} = param_2_ast
+            {:__aliases__, _, [_module_name]} = param_2_ast
           ]},
          type_ast,
          remaining_ast

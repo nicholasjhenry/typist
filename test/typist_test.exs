@@ -17,7 +17,7 @@ defmodule TypistTest do
   end
 
   describe "defining a type inline as an alias for an Elixir remote type" do
-    deftype Bar.t() :: integer
+    deftype Bar :: integer
 
     test "defines the type meta-data" do
       metadata = Bar.__type__()
