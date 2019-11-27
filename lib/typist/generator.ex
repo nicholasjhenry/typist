@@ -1,4 +1,5 @@
 defmodule Typist.Generator do
+  # module or inline block (e.g. record)
   def build(calling_module, {module_name, :t}, metadata) do
     module = Module.concat([calling_module, module_name])
 
@@ -13,6 +14,7 @@ defmodule Typist.Generator do
     end
   end
 
+  # Inline single case union type
   def build(calling_module, %{ast: {:"::", _, [{module_name, :t}, type]}} = metadata) do
     module = Module.concat([calling_module, module_name])
 
@@ -27,6 +29,7 @@ defmodule Typist.Generator do
     end
   end
 
+  # non-block
   def build(_calling_module, metadata) do
     quote do
       def __type__ do

@@ -10,22 +10,22 @@ defmodule Typist do
     end
   end
 
-  # Inline record
+  # inline block e.g. record
   defmacro deftype(ast, do: block) do
-    record(__CALLER__.module, ast, block)
+    type(__CALLER__.module, ast, block)
   end
 
-  # Module record
+  # block only e.g. record
   defmacro deftype(do: block) do
     type(__CALLER__.module, block)
   end
 
-  # Union and product types (inline or module)
+  # module or inline without block
   defmacro deftype(ast) do
     type(__CALLER__.module, ast)
   end
 
-  defp record(calling_module, module_ast, block_ast) do
+  defp type(calling_module, module_ast, block_ast) do
     module = Parser.parse(module_ast)
     fields = Parser.parse(block_ast)
     metadata = %{ast: fields}
