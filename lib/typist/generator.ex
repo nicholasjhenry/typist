@@ -1,5 +1,5 @@
 defmodule Typist.Generator do
-  alias Typist.TypeSpec
+  alias Typist.Code
 
   # Generate for a do-block
   # e.g. deftype Foo do: price :: integer
@@ -14,26 +14,11 @@ defmodule Typist.Generator do
 
   # Generate for inline union
   # i.e. {:|, _, _}
-  def perform_do_block({module_name, :t}, %{ast: {:|, _, _}} = metadata, code) do
-    module = Module.concat([metadata.calling_module] ++ module_name)
-
-    spec = TypeSpec.from_ast(metadata.ast)
-
+  def perform_do_block(module_ast, %{ast: {:|, _, _}} = metadata, code) do
     new_code =
-      quote do
-        alias unquote(module)
-
-        defmodule unquote(module) do
-          def __type__ do
-            unquote(Macro.escape(%{metadata | spec: Macro.to_string(spec)}))
-          end
-
-          # Add spec
-          def new(value) do
-            value
-          end
-        end
-      end
+      metadata
+      |> Code.union(metadata.ast)
+      |> Code.module(metadata, module_ast)
 
     [new_code | generate(metadata, code)]
   end
@@ -42,146 +27,60 @@ defmodule Typist.Generator do
   def perform_do_block(module_ast, %{ast: {:record, _, _}} = metadata, [] = code) do
     {_, _, fields} = metadata.ast
 
-    record =
+    new_code =
       metadata
-      |> record(metadata.ast)
-      |> module(metadata, module_ast)
+      |> Code.record(metadata.ast)
+      |> Code.module(metadata, module_ast)
 
-    [record | perform(metadata, fields, code)]
-  end
-
-  def module(content, metadata, {module_name, :t}) do
-    alias_name = Module.concat([metadata.calling_module] ++ [List.first(module_name)])
-    module = Module.concat([metadata.calling_module] ++ module_name)
-
-    quote do
-      alias unquote(alias_name)
-
-      defmodule unquote(module) do
-        unquote(content)
-      end
-    end
+    [new_code | perform(metadata, fields, code)]
   end
 
   # Generate for record from module
   def perform(%{ast: {:record, _, _} = ast} = metadata, ast, [] = code) do
     {_, _, fields} = ast
-    [record(metadata, ast) | perform(metadata, fields, code)]
-  end
+    new_code = Code.record(metadata, ast)
 
-  defp record(metadata, {_, _, fields} = ast) do
-    spec = TypeSpec.from_ast(ast)
-    metadata = %{metadata | spec: Macro.to_string(spec)}
-    struct = Enum.map(fields, fn {key, _} -> key end)
-
-    quote do
-      @enforce_keys [unquote_splicing(struct)]
-      defstruct [unquote_splicing(struct)]
-
-      def __type__ do
-        unquote(Macro.escape(metadata))
-      end
-
-      def new(fields) do
-        struct!(__MODULE__, fields)
-      end
-    end
+    [new_code | perform(metadata, fields, code)]
   end
 
   # Generate for aliases for a union type
   def perform(metadata, {:"::", _, [module_ast, {:|, _, _} = ast]}, [] = code) do
     new_code =
       metadata
-      |> union(ast)
-      |> module(metadata, module_ast)
+      |> Code.union(ast)
+      |> Code.module(metadata, module_ast)
 
     [new_code | code]
-  end
-
-  def union(metadata, ast) do
-    spec = TypeSpec.from_ast(ast)
-    metadata = %{metadata | ast: ast, spec: Macro.to_string(spec)}
-
-    quote do
-      def __type__ do
-        unquote(Macro.escape(metadata))
-      end
-
-      # Add spec
-      def new(value) do
-        value
-      end
-    end
   end
 
   # Generate for aliases for a non union type
   def perform(metadata, {:"::", _, [module_ast, ast]}, [] = code) do
     new_code =
       metadata
-      |> wrapped_type(ast)
-      |> module(metadata, module_ast)
+      |> Code.wrapped_type(ast)
+      |> Code.module(metadata, module_ast)
 
     [new_code | code]
-  end
-
-  def wrapped_type(metadata, ast) do
-    spec = TypeSpec.from_ast(ast)
-    metadata = %{metadata | ast: ast, spec: Macro.to_string(spec)}
-
-    quote do
-      defstruct [:value]
-
-      def __type__ do
-        unquote(Macro.escape(metadata))
-      end
-
-      # Add spec
-      def new(value) do
-        struct!(__MODULE__, value: value)
-      end
-    end
   end
 
   # Generate for product
   # e.g. {:product, _, _}
   def perform(metadata, {:product, _, params} = ast, code) do
-    new_code = wrapped_type(metadata, ast)
+    new_code = Code.wrapped_type(metadata, ast)
 
     [new_code | perform(metadata, params, code)]
   end
 
   # Generate for inline or module-based definitions
   def perform(%{ast: {:|, _, _} = ast} = metadata, {_, _, params} = ast, [] = code) do
-    new_code = union(metadata, ast)
+    new_code = Code.union(metadata, ast)
 
     [new_code | perform(metadata, params, code)]
   end
 
   def perform(%{ast: {_, :t}} = metadata, {_, :t} = term, code) do
-    new_code = single_union(metadata, term)
+    new_code = Code.single_union(metadata, term)
     [new_code | code]
-  end
-
-  defp single_union(metadata, term) do
-    spec = TypeSpec.from_ast(term)
-
-    metadata = %{metadata | spec: Macro.to_string(spec)}
-
-    quote do
-      @enforce_keys [:value]
-      defstruct [:value]
-
-      unquote(spec)
-
-      def __type__ do
-        unquote(Macro.escape(metadata))
-      end
-
-      # Add spec
-      def new(value) do
-        struct!(__MODULE__, value: value)
-      end
-    end
   end
 
   def perform(metadata, [head | tail], code) do
