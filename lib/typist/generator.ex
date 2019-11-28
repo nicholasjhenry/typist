@@ -134,9 +134,8 @@ defmodule Typist.Generator do
     [new_code | perform(metadata, params, code)]
   end
 
-  # Generate for inline or module-based definitions
-  def perform(metadata, {func, _, params} = ast, code)
-      when func in [:|, :record] and is_list(params) do
+  def perform(%{ast: {func, _, _}} = metadata, {_, _, params} = ast, [] = code)
+      when func in [:record] and is_list(params) do
     spec = TypeSpec.from_ast(ast)
 
     metadata = %{metadata | spec: Macro.to_string(spec)}
@@ -145,6 +144,27 @@ defmodule Typist.Generator do
       quote do
         def __type__ do
           unquote(Macro.escape(metadata))
+        end
+      end
+
+    [new_code | perform(metadata, params, code)]
+  end
+
+  # Generate for inline or module-based definitions
+  def perform(%{ast: {func, _, _} = ast} = metadata, {_, _, params} = ast, [] = code)
+      when func in [:|] and is_list(params) do
+    spec = TypeSpec.from_ast(ast)
+
+    metadata = %{metadata | spec: Macro.to_string(spec)}
+
+    new_code =
+      quote do
+        def __type__ do
+          unquote(Macro.escape(metadata))
+        end
+
+        def new(value) do
+          value
         end
       end
 
@@ -180,40 +200,11 @@ defmodule Typist.Generator do
     [new_code | code]
   end
 
-  # Generate for record fields, products
-  # e.g. {:code, {[:String], :t}}
-  def perform(%{ast: {:|, _, _}} = metadata, term, [] = code) when is_tuple(term) do
-    spec = TypeSpec.from_ast(term)
-
-    metadata = %{metadata | spec: Macro.to_string(spec)}
-
-    new_code =
-      quote do
-        def __type__ do
-          unquote(Macro.escape(metadata))
-        end
-
-        def new(value) do
-          value
-        end
-      end
-
-    [new_code | code]
-  end
-
-  def perform(_metadata, term, code) when is_tuple(term) do
-    code
-  end
-
-  def perform(_metadata, term, code) when is_atom(term) do
-    code
-  end
-
   def perform(metadata, [head | tail], code) do
     [perform(metadata, head, code) | perform(metadata, tail, code)]
   end
 
-  def perform(_metadata, [], code) do
+  def perform(_metadata, _term, code) do
     code
   end
 end
