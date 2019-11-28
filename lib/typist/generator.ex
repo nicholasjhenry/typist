@@ -27,6 +27,11 @@ defmodule Typist.Generator do
           def __type__ do
             unquote(Macro.escape(%{metadata | spec: Macro.to_string(spec)}))
           end
+
+          # Add spec
+          def new(value) do
+            value
+          end
         end
       end
 
@@ -54,8 +59,33 @@ defmodule Typist.Generator do
     [new_code | code]
   end
 
-  # Generate for aliases
-  def perform(metadata, {:"::", _, [{module_name, :t}, type]}, code) do
+  # Generate for aliases for a union type
+  def perform(metadata, {:"::", _, [{module_name, :t}, {:|, _, _} = type]}, [] = code) do
+    module = Module.concat([metadata.calling_module] ++ module_name)
+
+    spec = TypeSpec.from_ast(type)
+
+    new_code =
+      quote do
+        alias unquote(module)
+
+        defmodule unquote(module) do
+          def __type__ do
+            unquote(Macro.escape(%{metadata | ast: type, spec: Macro.to_string(spec)}))
+          end
+
+          # Add spec
+          def new(value) do
+            value
+          end
+        end
+      end
+
+    [new_code | code]
+  end
+
+  # Generate for aliases for a non union type
+  def perform(metadata, {:"::", _, [{module_name, :t}, type]}, [] = code) do
     module = Module.concat([metadata.calling_module] ++ module_name)
 
     spec = TypeSpec.from_ast(type)
@@ -81,8 +111,32 @@ defmodule Typist.Generator do
     [new_code | code]
   end
 
+  # Generate for product
+  # e.g. {:product, _, _}
+  def perform(metadata, {:product, _, params} = ast, code) do
+    spec = TypeSpec.from_ast(ast)
+
+    metadata = %{metadata | spec: Macro.to_string(spec)}
+
+    new_code =
+      quote do
+        defstruct [:value]
+
+        def __type__ do
+          unquote(Macro.escape(metadata))
+        end
+
+        def new(value) do
+          struct!(__MODULE__, value: value)
+        end
+      end
+
+    [new_code | perform(metadata, params, code)]
+  end
+
   # Generate for inline or module-based definitions
-  def perform(metadata, {_, _, params} = ast, code) when is_list(params) do
+  def perform(metadata, {func, _, params} = ast, code)
+      when func in [:|, :record] and is_list(params) do
     spec = TypeSpec.from_ast(ast)
 
     metadata = %{metadata | spec: Macro.to_string(spec)}
@@ -95,11 +149,6 @@ defmodule Typist.Generator do
       end
 
     [new_code | perform(metadata, params, code)]
-  end
-
-  # Generate for aliases, i.e. {:"::", _, _}
-  def perform(%{ast: {:"::", _, _}} = metadata, {_, :t} = term, code) do
-    single_union(metadata, term, code)
   end
 
   def perform(%{ast: {_, :t}} = metadata, {_, :t} = term, code) do
@@ -132,8 +181,8 @@ defmodule Typist.Generator do
   end
 
   # Generate for record fields, products
-  # e.g. {:code, {[:String], :t}}, {:price, :integer}
-  def perform(metadata, term, [] = code) when is_tuple(term) do
+  # e.g. {:code, {[:String], :t}}
+  def perform(%{ast: {:|, _, _}} = metadata, term, [] = code) when is_tuple(term) do
     spec = TypeSpec.from_ast(term)
 
     metadata = %{metadata | spec: Macro.to_string(spec)}
@@ -142,6 +191,10 @@ defmodule Typist.Generator do
       quote do
         def __type__ do
           unquote(Macro.escape(metadata))
+        end
+
+        def new(value) do
+          value
         end
       end
 
@@ -157,9 +210,7 @@ defmodule Typist.Generator do
   end
 
   def perform(metadata, [head | tail], code) do
-    new_code = perform(metadata, head, code)
-
-    [new_code | perform(metadata, tail, code)]
+    [perform(metadata, head, code) | perform(metadata, tail, code)]
   end
 
   def perform(_metadata, [], code) do

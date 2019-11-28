@@ -11,6 +11,10 @@ defmodule Typist.ProductTypeTest do
       assert metadata.ast == {:product, [], [{[:String], :t}, :integer]}
       assert metadata.spec == "@type(t :: %__MODULE__{value: {String.t(), integer}})"
     end
+
+    test "defines a constructor function" do
+      assert %FirstLast{value: {"John", 123}} == FirstLast.new({"John", 123})
+    end
   end
 
   describe "defining the type in a module" do
@@ -25,6 +29,10 @@ defmodule Typist.ProductTypeTest do
 
       assert metadata.ast == {:product, [], [{[:String], :t}, :integer]}
       assert metadata.spec == "@type(t :: %__MODULE__{value: {String.t(), integer}})"
+    end
+
+    test "defines a constructor function" do
+      assert %Foo.FirstLast{value: {"John", 123}} == Foo.FirstLast.new({"John", 123})
     end
   end
 end
