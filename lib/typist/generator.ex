@@ -115,31 +115,31 @@ defmodule Typist.Generator do
   end
 
   # Generate for aliases for a non union type
-  def perform(metadata, {:"::", _, [{module_name, :t}, ast]}, [] = code) do
-    module = Module.concat([metadata.calling_module] ++ module_name)
+  def perform(metadata, {:"::", _, [module_ast, ast]}, [] = code) do
+    new_code =
+      metadata
+      |> wrapped_type(ast)
+      |> module(metadata, module_ast)
 
+    [new_code | code]
+  end
+
+  def wrapped_type(metadata, ast) do
     spec = TypeSpec.from_ast(ast)
     metadata = %{metadata | ast: ast, spec: Macro.to_string(spec)}
 
-    new_code =
-      quote do
-        alias unquote(module)
+    quote do
+      defstruct [:value]
 
-        defmodule unquote(module) do
-          defstruct [:value]
-
-          def __type__ do
-            unquote(Macro.escape(metadata))
-          end
-
-          # Add spec
-          def new(value) do
-            struct!(__MODULE__, value: value)
-          end
-        end
+      def __type__ do
+        unquote(Macro.escape(metadata))
       end
 
-    [new_code | code]
+      # Add spec
+      def new(value) do
+        struct!(__MODULE__, value: value)
+      end
+    end
   end
 
   # Generate for product
