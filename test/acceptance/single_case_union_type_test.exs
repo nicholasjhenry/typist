@@ -14,6 +14,10 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert metadata.ast == {[:String], :t}
       assert metadata.spec == "@type(t :: %__MODULE__{value: String.t()})"
     end
+
+    test "defines a constructor function" do
+      assert %Foo{value: "ABC123"} == Foo.new("ABC123")
+    end
   end
 
   describe "defining a type inline as an alias for an Elixir remote type" do
@@ -25,6 +29,10 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert metadata.ast == :integer
       assert metadata.spec == "@type(t :: %__MODULE__{value: :integer})"
     end
+
+    test "defines a constructor function" do
+      assert %Bar{value: 123} == Bar.new(123)
+    end
   end
 
   describe "defining a type inline as an alias for a product type" do
@@ -35,6 +43,10 @@ defmodule Typist.SingleCaseUnionTypeTest do
 
       assert metadata.ast == {:product, [], [{[:String], :t}, :integer]}
       assert metadata.spec == "@type(t :: %__MODULE__{value: {String.t(), integer}})"
+    end
+
+    test "defines a constructor function" do
+      assert %Baz{value: {"ABC", 123}} == Baz.new({"ABC", 123})
     end
   end
 end
