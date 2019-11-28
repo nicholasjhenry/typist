@@ -34,7 +34,7 @@ defmodule Typist do
     fields = Parser.parse(block_ast)
     metadata = %Metadata{ast: fields, calling_module: calling_module}
 
-    code = Generator.generate(module, metadata, [])
+    code = Generator.generate(module, metadata)
 
     quote do
       unquote({:__block__, [], code})
@@ -45,7 +45,7 @@ defmodule Typist do
     ast = Parser.parse(ast)
     metadata = %Metadata{ast: ast, calling_module: calling_module}
 
-    code = Generator.generate(metadata, [])
+    code = Generator.generate(metadata)
 
     quote do
       unquote({:__block__, [], code})

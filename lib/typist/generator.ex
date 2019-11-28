@@ -3,13 +3,13 @@ defmodule Typist.Generator do
 
   # Generate for a do-block
   # e.g. deftype Foo do: price :: integer
-  def generate(module_ast, %Typist.Metadata{} = metadata, code) do
-    perform_do_block(module_ast, metadata, code)
+  def generate(module_ast, %Typist.Metadata{} = metadata) do
+    perform_do_block(module_ast, metadata, [])
   end
 
   # Generate for inline or module
-  def generate(%Typist.Metadata{} = metadata, code) do
-    perform(metadata, metadata.ast, code)
+  def generate(%Typist.Metadata{} = metadata) do
+    perform(metadata, metadata.ast, [])
   end
 
   # Generate for inline union
@@ -20,7 +20,7 @@ defmodule Typist.Generator do
       |> Code.union(metadata.ast)
       |> Code.module(metadata, module_ast)
 
-    [new_code | generate(metadata, code)]
+    [new_code | perform(metadata, metadata.ast, code)]
   end
 
   # Generate for record from block
@@ -53,7 +53,7 @@ defmodule Typist.Generator do
     [new_code | code]
   end
 
-  # Generate for aliases for a non union type
+  # Generate for aliases for a non-union type
   def perform(metadata, {:"::", _, [module_ast, ast]}, [] = code) do
     new_code =
       metadata
@@ -64,7 +64,6 @@ defmodule Typist.Generator do
   end
 
   # Generate for product
-  # e.g. {:product, _, _}
   def perform(metadata, {:product, _, params} = ast, code) do
     new_code = Code.wrapped_type(metadata, ast)
 
