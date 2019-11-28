@@ -6,13 +6,13 @@ defmodule Typist.Generator do
     perform(metadata, metadata.ast, code)
   end
 
-  def generate(module_ast, metadata, code) do
+  def generate(module_ast, %Typist.Metadata{} = metadata, code) do
     perform(module_ast, metadata, code)
   end
 
   # Generate for inline union
   def perform({module_name, :t}, %{ast: {:|, _, _}} = metadata, code) do
-    module = Module.concat([metadata.calling_module, module_name])
+    module = Module.concat([metadata.calling_module] ++ module_name)
 
     spec = TypeSpec.from_ast(metadata.ast)
 
@@ -32,7 +32,7 @@ defmodule Typist.Generator do
 
   # Generate for record
   def perform({module_name, :t}, %{ast: {:record, _, _}} = metadata, code) do
-    module = Module.concat([metadata.calling_module, module_name])
+    module = Module.concat([metadata.calling_module] ++ module_name)
 
     spec = TypeSpec.from_ast(metadata.ast)
 
@@ -51,8 +51,7 @@ defmodule Typist.Generator do
   end
 
   def perform(metadata, {:"::", _, [{module_name, :t}, type]}, code) do
-    IO.inspect(metadata.ast)
-    module = Module.concat([metadata.calling_module, module_name])
+    module = Module.concat([metadata.calling_module] ++ module_name)
 
     spec = TypeSpec.from_ast(type)
 
@@ -83,7 +82,7 @@ defmodule Typist.Generator do
         end
       end
 
-    [new_code | generate(metadata, params, code)]
+    [new_code | perform(metadata, params, code)]
   end
 
   def perform(metadata, term, []) when is_atom(term) or is_tuple(term) do
@@ -110,9 +109,9 @@ defmodule Typist.Generator do
   end
 
   def perform(metadata, [head | tail], code) do
-    new_code = generate(metadata, head, code)
+    new_code = perform(metadata, head, code)
 
-    [new_code | generate(metadata, tail, code)]
+    [new_code | perform(metadata, tail, code)]
   end
 
   def perform(_metadata, [], code) do
