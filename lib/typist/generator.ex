@@ -1,20 +1,20 @@
 defmodule Typist.Generator do
   alias Typist.Code
 
-  # Generate for a do-block
+  # Generate for a DO-BLOCK
   # e.g. deftype Foo do: price :: integer
   def generate(module_ast, %Typist.Metadata{} = metadata) do
     perform_do_block(module_ast, metadata, [])
   end
 
-  # Generate for inline or module
+  # Generate for INLINE or MODULE
   def generate(%Typist.Metadata{} = metadata) do
     perform(metadata, metadata.ast, [])
   end
 
-  # Generate for inline union
+  # Generate for UNION
   # i.e. {:|, _, _}
-  def perform_do_block(module_ast, %{ast: {:|, _, _}} = metadata, code) do
+  def perform_do_block(module_ast, %{ast: {:|, _, _}} = metadata, [] = code) do
     new_code =
       metadata
       |> Code.union(metadata.ast)
@@ -23,7 +23,7 @@ defmodule Typist.Generator do
     [new_code | perform(metadata, metadata.ast, code)]
   end
 
-  # Generate for record from block
+  # Generate for RECORD
   def perform_do_block(module_ast, %{ast: {:record, _, _}} = metadata, [] = code) do
     {_, _, fields} = metadata.ast
 
@@ -35,7 +35,7 @@ defmodule Typist.Generator do
     [new_code | perform(metadata, fields, code)]
   end
 
-  # Generate for record from module
+  # Generate for RECORD (module only)
   def perform(%{ast: {:record, _, _} = ast} = metadata, ast, [] = code) do
     {_, _, fields} = ast
     new_code = Code.record(metadata, ast)
@@ -43,7 +43,21 @@ defmodule Typist.Generator do
     [new_code | perform(metadata, fields, code)]
   end
 
-  # Generate for aliases for a union type
+  # Generate for PRODUCT
+  def perform(metadata, {:product, _, params} = ast, code) do
+    new_code = Code.wrapped_type(metadata, ast)
+
+    [new_code | perform(metadata, params, code)]
+  end
+
+  # Generate for a UNION type
+  def perform(%{ast: {:|, _, _} = ast} = metadata, {_, _, params} = ast, [] = code) do
+    new_code = Code.union(metadata, ast)
+
+    [new_code | perform(metadata, params, code)]
+  end
+
+  # Generate for aliases for a UNION type
   def perform(metadata, {:"::", _, [module_ast, {:|, _, _} = ast]}, [] = code) do
     new_code =
       metadata
@@ -53,7 +67,7 @@ defmodule Typist.Generator do
     [new_code | code]
   end
 
-  # Generate for aliases for a non-union type
+  # Generate for aliases for a NON-UNION type
   def perform(metadata, {:"::", _, [module_ast, ast]}, [] = code) do
     new_code =
       metadata
@@ -63,20 +77,7 @@ defmodule Typist.Generator do
     [new_code | code]
   end
 
-  # Generate for product
-  def perform(metadata, {:product, _, params} = ast, code) do
-    new_code = Code.wrapped_type(metadata, ast)
-
-    [new_code | perform(metadata, params, code)]
-  end
-
-  # Generate for inline or module-based definitions
-  def perform(%{ast: {:|, _, _} = ast} = metadata, {_, _, params} = ast, [] = code) do
-    new_code = Code.union(metadata, ast)
-
-    [new_code | perform(metadata, params, code)]
-  end
-
+  # Generate for SINGLE-CASE UNION type
   def perform(%{ast: {_, :t}} = metadata, {_, :t} = term, code) do
     new_code = Code.wrapped_type(metadata, term)
     [new_code | code]
