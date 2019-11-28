@@ -89,35 +89,37 @@ defmodule Typist.Generator do
   end
 
   # Generate for aliases for a union type
-  def perform(metadata, {:"::", _, [{module_name, :t}, {:|, _, _} = type]}, [] = code) do
-    module = Module.concat([metadata.calling_module] ++ module_name)
-
-    spec = TypeSpec.from_ast(type)
-
+  def perform(metadata, {:"::", _, [module_ast, {:|, _, _} = ast]}, [] = code) do
     new_code =
-      quote do
-        alias unquote(module)
-
-        defmodule unquote(module) do
-          def __type__ do
-            unquote(Macro.escape(%{metadata | ast: type, spec: Macro.to_string(spec)}))
-          end
-
-          # Add spec
-          def new(value) do
-            value
-          end
-        end
-      end
+      metadata
+      |> union(ast)
+      |> module(metadata, module_ast)
 
     [new_code | code]
   end
 
+  def union(metadata, ast) do
+    spec = TypeSpec.from_ast(ast)
+    metadata = %{metadata | ast: ast, spec: Macro.to_string(spec)}
+
+    quote do
+      def __type__ do
+        unquote(Macro.escape(metadata))
+      end
+
+      # Add spec
+      def new(value) do
+        value
+      end
+    end
+  end
+
   # Generate for aliases for a non union type
-  def perform(metadata, {:"::", _, [{module_name, :t}, type]}, [] = code) do
+  def perform(metadata, {:"::", _, [{module_name, :t}, ast]}, [] = code) do
     module = Module.concat([metadata.calling_module] ++ module_name)
 
-    spec = TypeSpec.from_ast(type)
+    spec = TypeSpec.from_ast(ast)
+    metadata = %{metadata | ast: ast, spec: Macro.to_string(spec)}
 
     new_code =
       quote do
@@ -127,7 +129,7 @@ defmodule Typist.Generator do
           defstruct [:value]
 
           def __type__ do
-            unquote(Macro.escape(%{metadata | ast: type, spec: Macro.to_string(spec)}))
+            unquote(Macro.escape(metadata))
           end
 
           # Add spec
