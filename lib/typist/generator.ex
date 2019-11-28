@@ -145,74 +145,43 @@ defmodule Typist.Generator do
   # Generate for product
   # e.g. {:product, _, _}
   def perform(metadata, {:product, _, params} = ast, code) do
-    spec = TypeSpec.from_ast(ast)
-
-    metadata = %{metadata | spec: Macro.to_string(spec)}
-
-    new_code =
-      quote do
-        defstruct [:value]
-
-        def __type__ do
-          unquote(Macro.escape(metadata))
-        end
-
-        def new(value) do
-          struct!(__MODULE__, value: value)
-        end
-      end
+    new_code = wrapped_type(metadata, ast)
 
     [new_code | perform(metadata, params, code)]
   end
 
   # Generate for inline or module-based definitions
-  def perform(%{ast: {func, _, _} = ast} = metadata, {_, _, params} = ast, [] = code)
-      when func in [:|] and is_list(params) do
-    spec = TypeSpec.from_ast(ast)
-
-    metadata = %{metadata | spec: Macro.to_string(spec)}
-
-    new_code =
-      quote do
-        def __type__ do
-          unquote(Macro.escape(metadata))
-        end
-
-        def new(value) do
-          value
-        end
-      end
+  def perform(%{ast: {:|, _, _} = ast} = metadata, {_, _, params} = ast, [] = code) do
+    new_code = union(metadata, ast)
 
     [new_code | perform(metadata, params, code)]
   end
 
   def perform(%{ast: {_, :t}} = metadata, {_, :t} = term, code) do
-    single_union(metadata, term, code)
+    new_code = single_union(metadata, term)
+    [new_code | code]
   end
 
-  defp single_union(metadata, term, code) do
+  defp single_union(metadata, term) do
     spec = TypeSpec.from_ast(term)
 
     metadata = %{metadata | spec: Macro.to_string(spec)}
 
-    new_code =
-      quote do
-        @enforce_keys [:value]
-        defstruct [:value]
+    quote do
+      @enforce_keys [:value]
+      defstruct [:value]
 
-        unquote(spec)
+      unquote(spec)
 
-        def __type__ do
-          unquote(Macro.escape(metadata))
-        end
-
-        # Add spec
-        def new(value) do
-          struct!(__MODULE__, value: value)
-        end
+      def __type__ do
+        unquote(Macro.escape(metadata))
       end
 
-    [new_code | code]
+      # Add spec
+      def new(value) do
+        struct!(__MODULE__, value: value)
+      end
+    end
   end
 
   def perform(metadata, [head | tail], code) do
