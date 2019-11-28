@@ -79,7 +79,7 @@ defmodule Typist.Generator do
   end
 
   def perform(%{ast: {_, :t}} = metadata, {_, :t} = term, code) do
-    new_code = Code.single_union(metadata, term)
+    new_code = Code.wrapped_type(metadata, term)
     [new_code | code]
   end
 

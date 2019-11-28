@@ -54,28 +54,8 @@ defmodule Typist.Code do
     metadata = %{metadata | ast: ast, spec: Macro.to_string(spec)}
 
     quote do
-      defstruct [:value]
-
-      def __type__ do
-        unquote(Macro.escape(metadata))
-      end
-
-      # Add spec
-      def new(value) do
-        struct!(__MODULE__, value: value)
-      end
-    end
-  end
-
-  def single_union(metadata, term) do
-    spec = TypeSpec.from_ast(term)
-    metadata = %{metadata | spec: Macro.to_string(spec)}
-
-    quote do
       @enforce_keys [:value]
       defstruct [:value]
-
-      unquote(spec)
 
       def __type__ do
         unquote(Macro.escape(metadata))
