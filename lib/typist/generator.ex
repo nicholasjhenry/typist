@@ -38,34 +38,54 @@ defmodule Typist.Generator do
     [new_code | generate(metadata, code)]
   end
 
-  # Generate for record
-  # i.e. {:record, _, _}
-  def perform_do_block({module_name, :t}, %{ast: {:record, _, fields}} = metadata, code) do
+  # Generate for record from block
+  def perform_do_block(module_ast, %{ast: {:record, _, _}} = metadata, [] = code) do
+    {_, _, fields} = metadata.ast
+
+    record =
+      metadata
+      |> record(metadata.ast)
+      |> module(metadata, module_ast)
+
+    [record | perform(metadata, fields, code)]
+  end
+
+  def module(content, metadata, {module_name, :t}) do
     alias_name = Module.concat([metadata.calling_module] ++ [List.first(module_name)])
     module = Module.concat([metadata.calling_module] ++ module_name)
-    spec = TypeSpec.from_ast(metadata.ast)
 
+    quote do
+      alias unquote(alias_name)
+
+      defmodule unquote(module) do
+        unquote(content)
+      end
+    end
+  end
+
+  # Generate for record from module
+  def perform(%{ast: {:record, _, _} = ast} = metadata, ast, [] = code) do
+    {_, _, fields} = ast
+    [record(metadata, ast) | perform(metadata, fields, code)]
+  end
+
+  defp record(metadata, {_, _, fields} = ast) do
+    spec = TypeSpec.from_ast(ast)
+    metadata = %{metadata | spec: Macro.to_string(spec)}
     struct = Enum.map(fields, fn {key, _} -> key end)
 
-    new_code =
-      quote do
-        alias unquote(alias_name)
+    quote do
+      @enforce_keys [unquote_splicing(struct)]
+      defstruct [unquote_splicing(struct)]
 
-        defmodule unquote(module) do
-          @enforce_keys [unquote_splicing(struct)]
-          defstruct [unquote_splicing(struct)]
-
-          def __type__ do
-            unquote(Macro.escape(%{metadata | spec: Macro.to_string(spec)}))
-          end
-
-          def new(fields) do
-            struct!(__MODULE__, fields)
-          end
-        end
+      def __type__ do
+        unquote(Macro.escape(metadata))
       end
 
-    [new_code | code]
+      def new(fields) do
+        struct!(__MODULE__, fields)
+      end
+    end
   end
 
   # Generate for aliases for a union type
@@ -141,30 +161,6 @@ defmodule Typist.Generator do
       end
 
     [new_code | perform(metadata, params, code)]
-  end
-
-  def perform(%{ast: {:record, _, _}} = metadata, {_, _, fields} = ast, [] = code) do
-    spec = TypeSpec.from_ast(ast)
-
-    metadata = %{metadata | spec: Macro.to_string(spec)}
-
-    struct = Enum.map(fields, fn {key, _} -> key end)
-
-    new_code =
-      quote do
-        @enforce_keys [unquote_splicing(struct)]
-        defstruct [unquote_splicing(struct)]
-
-        def __type__ do
-          unquote(Macro.escape(metadata))
-        end
-
-        def new(fields) do
-          struct!(__MODULE__, fields)
-        end
-      end
-
-    [new_code | perform(metadata, fields, code)]
   end
 
   # Generate for inline or module-based definitions
