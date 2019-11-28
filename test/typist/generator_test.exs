@@ -14,13 +14,13 @@ defmodule Typist.GeneratorTest do
   end
 
   describe "generating a record type" do
-    deftype ContactInfo do
+    deftype Qux.ContactInfo do
       email :: Email.t()
       price :: integer
     end
 
     test "creates the embedded modules" do
-      assert ContactInfo.__type__()
+      assert Qux.ContactInfo.__type__()
     end
   end
 

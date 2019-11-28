@@ -1,17 +1,19 @@
 defmodule Typist.Generator do
   alias Typist.TypeSpec
 
-  # Public entry points
+  # Generate for a do-block
+  # e.g. deftype Foo do: price :: integer
+  def generate(module_ast, %Typist.Metadata{} = metadata, code) do
+    perform_do_block(module_ast, metadata, code)
+  end
+
+  # Generate for inline or module
   def generate(%Typist.Metadata{} = metadata, code) do
     perform(metadata, metadata.ast, code)
   end
 
-  def generate(module_ast, %Typist.Metadata{} = metadata, code) do
-    perform(module_ast, metadata, code)
-  end
-
   # Generate for inline union
-  def perform({module_name, :t}, %{ast: {:|, _, _}} = metadata, code) do
+  def perform_do_block({module_name, :t}, %{ast: {:|, _, _}} = metadata, code) do
     module = Module.concat([metadata.calling_module] ++ module_name)
 
     spec = TypeSpec.from_ast(metadata.ast)
@@ -31,14 +33,14 @@ defmodule Typist.Generator do
   end
 
   # Generate for record
-  def perform({module_name, :t}, %{ast: {:record, _, _}} = metadata, code) do
+  def perform_do_block({module_name, :t}, %{ast: {:record, _, _}} = metadata, code) do
+    alias_name = Module.concat([metadata.calling_module] ++ [List.first(module_name)])
     module = Module.concat([metadata.calling_module] ++ module_name)
-
     spec = TypeSpec.from_ast(metadata.ast)
 
     new_code =
       quote do
-        alias unquote(module)
+        alias unquote(alias_name)
 
         defmodule unquote(module) do
           def __type__ do

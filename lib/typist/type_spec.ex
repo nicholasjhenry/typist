@@ -1,7 +1,7 @@
 defmodule Typist.TypeSpec do
   def from_ast({module_name, :t}) do
     quote do
-      @type t :: %__MODULE__{value: unquote(Module.concat([module_name])).t}
+      @type t :: %__MODULE__{value: unquote(Module.concat(module_name)).t}
     end
   end
 
@@ -61,13 +61,13 @@ defmodule Typist.TypeSpec do
 
   defp do_ast({:"::", _, [{aliasing_module, :t}, _aliased]}) do
     quote do
-      unquote(Module.concat([aliasing_module])).t()
+      unquote(Module.concat(aliasing_module)).t()
     end
   end
 
   defp do_ast({module_name, :t}) do
     quote do
-      unquote(Module.concat([module_name])).t()
+      unquote(Module.concat(module_name)).t()
     end
   end
 

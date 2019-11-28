@@ -17,8 +17,8 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       assert metadata.ast ==
                {:|, [],
                 [
-                  {:Nickname, :t},
-                  {:|, [], [{:FirstLast, :t}, {:|, [], [{:FormalName, :t}, :binary]}]}
+                  {[:Nickname], :t},
+                  {:|, [], [{[:FirstLast], :t}, {:|, [], [{[:FormalName], :t}, :binary]}]}
                 ]}
 
       assert metadata.spec ==
@@ -39,7 +39,7 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       metadata = Baz.Name.__type__()
 
       assert metadata.ast ==
-               {:|, [], [{:Nickname, :t}, {:|, [], [FirstLast: :t, FormalName: :t]}]}
+               {:|, [], [{[:Nickname], :t}, {:|, [], [{[:FirstLast], :t}, {[:FormalName], :t}]}]}
 
       assert metadata.spec ==
                "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t())"
@@ -59,14 +59,14 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       assert metadata.ast ==
                {:|, [],
                 [
-                  {:"::", [], [EmailOnly: :t, EmailContactInfo: :t]},
+                  {:"::", [], [{[:EmailOnly], :t}, {[:EmailContactInfo], :t}]},
                   {:|, [],
                    [
-                     {:"::", [], [PostOnly: :t, PostContactInfo: :t]},
+                     {:"::", [], [{[:PostOnly], :t}, {[:PostContactInfo], :t}]},
                      {:"::", [],
                       [
-                        {:EmailAndPost, :t},
-                        {:product, [], [{:EmailContactInfo, :t}, {:PostalContactInfo, :t}]}
+                        {[:EmailAndPost], :t},
+                        {:product, [], [{[:EmailContactInfo], :t}, {[:PostalContactInfo], :t}]}
                       ]}
                    ]}
                 ]}
