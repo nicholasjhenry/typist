@@ -2,16 +2,16 @@ defmodule Typist.Generator do
   alias Typist.TypeSpec
 
   # Public entry points
-  def build(%Typist.Metadata{} = metadata, code) do
-    do_build(metadata, metadata.ast, code)
+  def generate(%Typist.Metadata{} = metadata, code) do
+    perform(metadata, metadata.ast, code)
   end
 
-  def build(module_ast, metadata, code) do
-    do_build(module_ast, metadata, code)
+  def generate(module_ast, metadata, code) do
+    perform(module_ast, metadata, code)
   end
 
-  # inline union
-  def do_build({module_name, :t}, %{ast: {:|, _, _}} = metadata, code) do
+  # Generate for inline union
+  def perform({module_name, :t}, %{ast: {:|, _, _}} = metadata, code) do
     module = Module.concat([metadata.calling_module, module_name])
 
     spec = TypeSpec.from_ast(metadata.ast)
@@ -27,11 +27,11 @@ defmodule Typist.Generator do
         end
       end
 
-    [new_code | build(metadata, code)]
+    [new_code | generate(metadata, code)]
   end
 
-  # record
-  def do_build({module_name, :t}, metadata, code) do
+  # Generate for record
+  def perform({module_name, :t}, %{ast: {:record, _, _}} = metadata, code) do
     module = Module.concat([metadata.calling_module, module_name])
 
     spec = TypeSpec.from_ast(metadata.ast)
@@ -50,7 +50,8 @@ defmodule Typist.Generator do
     [new_code | code]
   end
 
-  def do_build(metadata, {:"::", _, [{module_name, :t}, type]}, code) do
+  def perform(metadata, {:"::", _, [{module_name, :t}, type]}, code) do
+    IO.inspect(metadata.ast)
     module = Module.concat([metadata.calling_module, module_name])
 
     spec = TypeSpec.from_ast(type)
@@ -70,20 +71,22 @@ defmodule Typist.Generator do
   end
 
   # non-block
-  def do_build(metadata, {_, _, params} = ast, code) when is_list(params) do
+  def perform(metadata, {_, _, params} = ast, code) when is_list(params) do
     spec = TypeSpec.from_ast(ast)
+
+    metadata = %{metadata | spec: Macro.to_string(spec)}
 
     new_code =
       quote do
         def __type__ do
-          unquote(Macro.escape(%{metadata | spec: Macro.to_string(spec)}))
+          unquote(Macro.escape(metadata))
         end
       end
 
-    [new_code | build(metadata, params, code)]
+    [new_code | generate(metadata, params, code)]
   end
 
-  def do_build(metadata, term, []) when is_atom(term) or is_tuple(term) do
+  def perform(metadata, term, []) when is_atom(term) or is_tuple(term) do
     spec = TypeSpec.from_ast(term)
 
     metadata = %{metadata | spec: Macro.to_string(spec)}
@@ -98,21 +101,21 @@ defmodule Typist.Generator do
     [new_code]
   end
 
-  def do_build(_metadata, term, code) when is_tuple(term) do
+  def perform(_metadata, term, code) when is_tuple(term) do
     code
   end
 
-  def do_build(_metadata, term, code) when is_atom(term) do
+  def perform(_metadata, term, code) when is_atom(term) do
     code
   end
 
-  def do_build(metadata, [head | tail], code) do
-    new_code = build(metadata, head, code)
+  def perform(metadata, [head | tail], code) do
+    new_code = generate(metadata, head, code)
 
-    [new_code | build(metadata, tail, code)]
+    [new_code | generate(metadata, tail, code)]
   end
 
-  def do_build(_metadata, [], code) do
+  def perform(_metadata, [], code) do
     code
   end
 end

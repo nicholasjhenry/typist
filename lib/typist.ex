@@ -14,17 +14,17 @@ defmodule Typist do
     end
   end
 
-  # inline block e.g. record
+  # inline block i.e. record, union
   defmacro deftype(ast, do: block) do
     type(__CALLER__.module, ast, block)
   end
 
-  # block only e.g. record
+  # block only i.e. record, union
   defmacro deftype(do: block) do
     type(__CALLER__.module, block)
   end
 
-  # module or inline without block
+  # module or inline without block, i.e. union (including single), product
   defmacro deftype(ast) do
     type(__CALLER__.module, ast)
   end
@@ -34,7 +34,7 @@ defmodule Typist do
     fields = Parser.parse(block_ast)
     metadata = %Metadata{ast: fields, calling_module: calling_module}
 
-    code = Generator.build(module, metadata, [])
+    code = Generator.generate(module, metadata, [])
 
     quote do
       unquote({:__block__, [], code})
@@ -45,7 +45,7 @@ defmodule Typist do
     ast = Parser.parse(ast)
     metadata = %Metadata{ast: ast, calling_module: calling_module}
 
-    code = Generator.build(metadata, [])
+    code = Generator.generate(metadata, [])
 
     quote do
       unquote({:__block__, [], code})

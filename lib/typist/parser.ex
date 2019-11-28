@@ -1,7 +1,10 @@
 defmodule Typist.Parser do
+  # Parses Elixir's AST and generates a simplified version of the AST that
+  # is easier to generate code for.
+  #
   def parse(ast) do
     case perform(ast) do
-      # Apply any remaining param to the function
+      # Apply any hanging param to a union function
       {param_2, {:|, _metadata, [param_1]}} ->
         {:|, [], [param_1, param_2]}
 
@@ -10,12 +13,13 @@ defmodule Typist.Parser do
     end
   end
 
-  # Generate AST for record
+  # Parse record
   defp perform({:__block__, _, fields_ast}) when is_list(fields_ast) do
-    {:record, [], Enum.map(fields_ast, &fields/1)}
+    record(fields_ast)
   end
 
-  # Alias within a Union
+  # Parse union containing aliases
+  # e.g. Qux :: integer | Baz :: boolean | Zoo :: term
   defp perform(
          {:"::", _,
           [
@@ -27,9 +31,7 @@ defmodule Typist.Parser do
             remaining_ast
           ]}
        ) do
-    # e.g. {:integer, [], MyApp}
     previous_aliased_type = perform(previous_aliased_type_ast)
-    # e.g. {:__aliases__, [alias: false], [:Baz]}
     alias_type = perform(alias_type_ast)
 
     case perform(remaining_ast) do
@@ -44,16 +46,21 @@ defmodule Typist.Parser do
     end
   end
 
-  # e.g. Handle a mix of union types, e.g. integer | boolean | any | Foo.t() :: number | Bar.t() :: term
+  # Parse union containing mix of aliases and remote/basic types
+  # e.g. integer | boolean | any | Foo.t() :: number | Bar.t() :: term
   defp perform({:"::", _, [{:|, _, [param_1_ast, param_2_ast]}, remaining_ast]}) do
-    perform(param_2_ast, param_1_ast, remaining_ast)
+    union(param_2_ast, param_1_ast, remaining_ast)
   end
 
+  # Parse union with remote basic types only
+  # e.g. integer | boolean | any | Foo.t() :: number | Bar.t() :: term
   defp perform({:|, _, args}) do
     args = Enum.map(args, &perform(&1))
     {:|, [], args}
   end
 
+  # Parse inline union with multiple aliases
+  # e.g. deftype ContactInfo, do: EmailOnly :: EmailContactInfo.t() | PostOnly :: PostContactInfo.t()
   defp perform(
          {:"::", _,
           [
@@ -79,33 +86,38 @@ defmodule Typist.Parser do
     end
   end
 
-  # Handle aliasing e.g. Foo.t() :: integer
+  # Parse an alias
+  # e.g. Foo.t() :: integer
   defp perform({:"::", _, [{:__aliases__, _, [_]}, _] = args}) do
     args = Enum.map(args, &perform(&1))
     {:"::", [], args}
   end
 
-  # Handle an alias, e.g. Foo.t()
+  # Parse a type
+  # e.g. Foo.t()
   defp perform({{:., _, [{:__aliases__, _metadata, [module_name]}, :t]}, _, _}) do
     {module_name, :t}
   end
 
-  # Handle an alias, e.g. Foo
+  # Parse a module name
+  # e.g. Foo
   defp perform({:__aliases__, _metadata, [module_name]}) do
     {module_name, :t}
   end
 
+  # Parse a function
   defp perform([{:->, _, [input, output]}]) do
     {:->, [], [Enum.map(input, &perform/1)], perform(output)}
   end
 
-  # Handle basic types
+  # Parse basic types
   defp perform({type, _, _})
        when type in [:boolean, :integer, :term, :any, :number, :pid, :binary] do
     type
   end
 
-  # Handle product type, e.g. {integer, Foo.t(), boolean}
+  # Parse a product type
+  # e.g. {integer, Foo.t(), boolean}
   defp perform(product_type) when is_tuple(product_type) do
     params =
       product_type
@@ -115,9 +127,9 @@ defmodule Typist.Parser do
     {:product, [], params}
   end
 
-  # Handle aliasing in Union types
+  ## Handle aliasing in Union types
 
-  defp perform(
+  defp union(
          {:|, _,
           [
             param_1_ast,
@@ -129,22 +141,22 @@ defmodule Typist.Parser do
     case perform(remaining_ast) do
       {second_param, {:|, _, [aliased_type]}} ->
         param_1 = perform(type_ast)
-        param_2 = perform(param_1_ast, param_2_ast, aliased_type, second_param)
+        param_2 = union(param_1_ast, param_2_ast, aliased_type, second_param)
         {:|, [], [param_1, param_2]}
     end
   end
 
-  defp perform(
+  defp union(
          {:|, _, [params_1_ast, params_2_ast]},
          type_ast,
          remaining_ast
        ) do
     param_1 = perform(type_ast)
-    param_2 = perform(params_2_ast, params_1_ast, remaining_ast)
+    param_2 = union(params_2_ast, params_1_ast, remaining_ast)
     {:|, [], [param_1, param_2]}
   end
 
-  defp perform(type_ast, alias_type_ast, aliased_type, second_param) do
+  defp union(type_ast, alias_type_ast, aliased_type, second_param) do
     param_1 = perform(type_ast)
     alias_type = perform(alias_type_ast)
 
@@ -152,6 +164,10 @@ defmodule Typist.Parser do
     param_2 = {:|, [], [foo, second_param]}
 
     {:|, [], [param_1, param_2]}
+  end
+
+  defp record(fields_ast) do
+    {:record, [], Enum.map(fields_ast, &fields/1)}
   end
 
   defp fields({:"::", _, [{key, _, _}, type_ast]}) do
