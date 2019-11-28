@@ -14,6 +14,10 @@ defmodule Typist.RecordTypeTest do
       assert metadata.ast == {:record, [], [{:code, {[:String], :t}}, {:price, :integer}]}
       assert metadata.spec == "@type(t :: %__MODULE__{code: String.t(), price: integer})"
     end
+
+    test "defines a constructor function" do
+      assert %Product{code: "ABC", price: 10_00} == Product.new(%{code: "ABC", price: 10_00})
+    end
   end
 
   describe "defining the type in a module" do
@@ -29,6 +33,11 @@ defmodule Typist.RecordTypeTest do
 
       assert metadata.ast == {:record, [], [{:code, {[:String], :t}}, {:price, :integer}]}
       assert metadata.spec == "@type(t :: %__MODULE__{code: String.t(), price: integer})"
+    end
+
+    test "defines a constructor function" do
+      assert %Foo.Product{code: "ABC", price: 10_00} ==
+               Foo.Product.new(%{code: "ABC", price: 10_00})
     end
   end
 end

@@ -40,18 +40,27 @@ defmodule Typist.Generator do
 
   # Generate for record
   # i.e. {:record, _, _}
-  def perform_do_block({module_name, :t}, %{ast: {:record, _, _}} = metadata, code) do
+  def perform_do_block({module_name, :t}, %{ast: {:record, _, fields}} = metadata, code) do
     alias_name = Module.concat([metadata.calling_module] ++ [List.first(module_name)])
     module = Module.concat([metadata.calling_module] ++ module_name)
     spec = TypeSpec.from_ast(metadata.ast)
+
+    struct = Enum.map(fields, fn {key, _} -> key end)
 
     new_code =
       quote do
         alias unquote(alias_name)
 
         defmodule unquote(module) do
+          @enforce_keys [unquote_splicing(struct)]
+          defstruct [unquote_splicing(struct)]
+
           def __type__ do
             unquote(Macro.escape(%{metadata | spec: Macro.to_string(spec)}))
+          end
+
+          def new(fields) do
+            struct!(__MODULE__, fields)
           end
         end
       end
@@ -134,20 +143,28 @@ defmodule Typist.Generator do
     [new_code | perform(metadata, params, code)]
   end
 
-  def perform(%{ast: {func, _, _}} = metadata, {_, _, params} = ast, [] = code)
-      when func in [:record] and is_list(params) do
+  def perform(%{ast: {:record, _, _}} = metadata, {_, _, fields} = ast, [] = code) do
     spec = TypeSpec.from_ast(ast)
 
     metadata = %{metadata | spec: Macro.to_string(spec)}
 
+    struct = Enum.map(fields, fn {key, _} -> key end)
+
     new_code =
       quote do
+        @enforce_keys [unquote_splicing(struct)]
+        defstruct [unquote_splicing(struct)]
+
         def __type__ do
           unquote(Macro.escape(metadata))
         end
+
+        def new(fields) do
+          struct!(__MODULE__, fields)
+        end
       end
 
-    [new_code | perform(metadata, params, code)]
+    [new_code | perform(metadata, fields, code)]
   end
 
   # Generate for inline or module-based definitions
