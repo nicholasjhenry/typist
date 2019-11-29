@@ -45,7 +45,7 @@ defmodule Typist.Generator do
 
   # Generate for PRODUCT, only wrap for aliased types
   def perform(%{ast: ast} = metadata, {:product, _, params} = ast, code) do
-    new_code = Code.wrapped_type(metadata, ast)
+    new_code = Code.product(metadata, ast)
 
     [new_code | perform(metadata, params, code)]
   end
@@ -75,7 +75,7 @@ defmodule Typist.Generator do
   def perform(metadata, {:"::", _, [module_ast, ast]}, [] = code) do
     new_code =
       metadata
-      |> Code.wrapped_type(ast)
+      |> Code.single_case_union(ast)
       |> Code.module(metadata, module_ast)
 
     [new_code | code]
@@ -83,7 +83,7 @@ defmodule Typist.Generator do
 
   # Generate for SINGLE-CASE UNION type
   def perform(%{ast: {_, :t}} = metadata, {_, :t} = term, code) do
-    new_code = Code.wrapped_type(metadata, term)
+    new_code = Code.single_case_union(metadata, term)
     [new_code | code]
   end
 

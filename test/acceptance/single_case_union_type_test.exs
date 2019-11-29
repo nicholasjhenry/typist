@@ -27,7 +27,7 @@ defmodule Typist.SingleCaseUnionTypeTest do
       metadata = Bar.__type__()
 
       assert metadata.ast == {:basic, [], [:integer]}
-      assert metadata.spec == "@type(t :: %__MODULE__{value: :integer})"
+      assert metadata.spec == "@type(t :: %__MODULE__{value: integer})"
     end
 
     test "defines a constructor function" do

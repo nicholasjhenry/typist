@@ -1,34 +1,26 @@
 defmodule Typist.TypeSpec do
   def from_ast({module_name, :t}) do
     quote do
-      @type t :: %__MODULE__{value: unquote(Module.concat(module_name)).t}
+      unquote(Module.concat(module_name)).t
     end
   end
 
   def from_ast({:basic, _, [term]}) do
-    quote do
-      @type t :: %__MODULE__{value: unquote(term)}
-    end
+    {term, [], Elixir}
   end
 
   def from_ast({:|, _, params}) do
     quote do
-      @type t :: unquote({:|, [], do_ast(params)})
+      unquote({:|, [], do_ast(params)})
     end
   end
 
   def from_ast({:product, _, params}) do
-    quote do
-      @type t :: %__MODULE__{value: {unquote_splicing(do_ast(params))}}
-    end
+    params |> do_ast() |> List.to_tuple()
   end
 
   def from_ast({:record, _, fields}) do
-    spec = do_fields(fields)
-
-    quote do
-      @type t :: %__MODULE__{unquote_splicing(spec)}
-    end
+    do_fields(fields)
   end
 
   defp do_fields([head | tail]) do
@@ -47,7 +39,7 @@ defmodule Typist.TypeSpec do
 
   def from_ast(term) do
     quote do
-      @type t :: {:not_defined, unquote(Macro.escape(term))}
+      {:not_defined, unquote(Macro.escape(term))}
     end
   end
 

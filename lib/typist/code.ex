@@ -15,7 +15,11 @@ defmodule Typist.Code do
   end
 
   def record(metadata, {_, _, fields} = ast) do
-    spec = TypeSpec.from_ast(ast)
+    spec =
+      quote do
+        @type t :: %__MODULE__{unquote_splicing(TypeSpec.from_ast(ast))}
+      end
+
     metadata = %{metadata | spec: Macro.to_string(spec)}
     struct = Enum.map(fields, fn {key, _} -> key end)
 
@@ -34,7 +38,11 @@ defmodule Typist.Code do
   end
 
   def union(metadata, ast) do
-    spec = TypeSpec.from_ast(ast)
+    spec =
+      quote do
+        @type t :: unquote(TypeSpec.from_ast(ast))
+      end
+
     metadata = %{metadata | ast: ast, spec: Macro.to_string(spec)}
 
     quote do
@@ -49,8 +57,20 @@ defmodule Typist.Code do
     end
   end
 
-  def wrapped_type(metadata, ast) do
-    spec = TypeSpec.from_ast(ast)
+  def product(metadata, ast) do
+    wrapped_type(metadata, ast)
+  end
+
+  def single_case_union(metadata, ast) do
+    wrapped_type(metadata, ast)
+  end
+
+  defp wrapped_type(metadata, ast) do
+    spec =
+      quote do
+        @type t :: %__MODULE__{value: unquote(TypeSpec.from_ast(ast))}
+      end
+
     metadata = %{metadata | ast: ast, spec: Macro.to_string(spec)}
 
     quote do
