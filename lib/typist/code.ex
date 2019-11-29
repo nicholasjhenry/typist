@@ -43,14 +43,27 @@ defmodule Typist.Code do
         @type t :: unquote(TypeSpec.from_ast(ast))
       end
 
-    metadata = %{metadata | ast: ast, spec: Macro.to_string(spec)}
+    constructor =
+      quote do
+        @spec new(unquote(TypeSpec.from_ast(ast))) :: t
+      end
+
+    metadata = %{
+      metadata
+      | ast: ast,
+        spec: Macro.to_string(spec),
+        constructor: Macro.to_string(constructor)
+    }
 
     quote do
+      unquote(spec)
+
       def __type__ do
         unquote(Macro.escape(metadata))
       end
 
-      # Add spec
+      unquote(constructor)
+
       def new(value) do
         value
       end

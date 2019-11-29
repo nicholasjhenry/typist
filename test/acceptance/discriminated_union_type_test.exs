@@ -24,6 +24,9 @@ defmodule Typist.DiscriminatedUnionTypeTest do
 
       assert metadata.spec ==
                "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t() | binary)"
+
+      assert metadata.constructor ==
+               "@spec(new(Nickname.t() | FirstLast.t() | FormalName.t() | binary) :: t)"
     end
 
     test "defines a constructor function" do
@@ -48,6 +51,9 @@ defmodule Typist.DiscriminatedUnionTypeTest do
 
       assert metadata.spec ==
                "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t())"
+
+      assert metadata.constructor ==
+               "@spec(new(Nickname.t() | FirstLast.t() | FormalName.t()) :: t)"
     end
 
     test "defines a constructor function" do
@@ -84,6 +90,9 @@ defmodule Typist.DiscriminatedUnionTypeTest do
 
       assert metadata.spec == "@type(t :: EmailOnly.t() | PostOnly.t() | EmailAndPost.t())"
 
+      assert metadata.constructor ==
+               "@spec(new(EmailOnly.t() | PostOnly.t() | EmailAndPost.t()) :: t)"
+
       assert EmailOnly.__type__()
     end
 
@@ -104,6 +113,7 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       metadata = Maybe.__type__()
 
       assert metadata.ast == {:|, [], [{:product, [], [:some, {:basic, [], [:any]}]}, :none]}
+      assert metadata.constructor == "@spec(new({:some, any} | :none) :: t)"
     end
 
     test "defines a constructor function" do
