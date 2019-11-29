@@ -18,7 +18,8 @@ defmodule Typist.DiscriminatedUnionTypeTest do
                {:|, [],
                 [
                   {[:Nickname], :t},
-                  {:|, [], [{[:FirstLast], :t}, {:|, [], [{[:FormalName], :t}, :binary]}]}
+                  {:|, [],
+                   [{[:FirstLast], :t}, {:|, [], [{[:FormalName], :t}, {:basic, [], [:binary]}]}]}
                 ]}
 
       assert metadata.spec ==

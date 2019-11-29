@@ -12,7 +12,7 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == :integer
+      assert result == {:basic, [], [:integer]}
     end
 
     test "simple union remote type" do
@@ -23,7 +23,7 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {:"::", [], [{[:Qux], :t}, :integer]}
+      assert result == {:"::", [], [{[:Qux], :t}, {:basic, [], [:integer]}]}
     end
 
     test "simple union remote type alias a remote type" do
@@ -45,7 +45,9 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {:"::", [], [{[:Qux], :t}, {:->, [], [[:binary]], :integer}]}
+      assert result ==
+               {:"::", [],
+                [{[:Qux], :t}, {:->, [], [[{:basic, [], [:binary]}]], {:basic, [], [:integer]}}]}
     end
 
     test "mutiple remote types" do
@@ -59,11 +61,11 @@ defmodule Typist.ParserTest do
       assert result ==
                {:|, [],
                 [
-                  {:"::", [], [{[:Qux], :t}, :integer]},
+                  {:"::", [], [{[:Qux], :t}, {:basic, [], [:integer]}]},
                   {:|, [],
                    [
-                     {:"::", [], [{[:Baz], :t}, :boolean]},
-                     {:"::", [], [{[:Zoo], :t}, :term]}
+                     {:"::", [], [{[:Baz], :t}, {:basic, [], [:boolean]}]},
+                     {:"::", [], [{[:Zoo], :t}, {:basic, [], [:term]}]}
                    ]}
                 ]}
     end
@@ -76,7 +78,12 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {:|, [], [:integer, {:|, [], [:boolean, :term]}]}
+      assert result ==
+               {:|, [],
+                [
+                  {:basic, [], [:integer]},
+                  {:|, [], [{:basic, [], [:boolean]}, {:basic, [], [:term]}]}
+                ]}
     end
 
     test "mixed types" do
@@ -90,11 +97,11 @@ defmodule Typist.ParserTest do
       assert result ==
                {:|, [],
                 [
-                  :integer,
+                  {:basic, [], [:integer]},
                   {:|, [],
                    [
-                     {:"::", [], [{[:Foo], :t}, :boolean]},
-                     {:"::", [], [{[:Bar], :t}, :term]}
+                     {:"::", [], [{[:Foo], :t}, {:basic, [], [:boolean]}]},
+                     {:"::", [], [{[:Bar], :t}, {:basic, [], [:term]}]}
                    ]}
                 ]}
     end
@@ -110,17 +117,17 @@ defmodule Typist.ParserTest do
       assert result ==
                {:|, [],
                 [
-                  :integer,
+                  {:basic, [], [:integer]},
                   {:|, [],
                    [
-                     :boolean,
+                     {:basic, [], [:boolean]},
                      {:|, [],
                       [
-                        :any,
+                        {:basic, [], [:any]},
                         {:|, [],
                          [
-                           {:"::", [], [{[:Foo], :t}, :number]},
-                           {:"::", [], [{[:Bar], :t}, :term]}
+                           {:"::", [], [{[:Foo], :t}, {:basic, [], [:number]}]},
+                           {:"::", [], [{[:Bar], :t}, {:basic, [], [:term]}]}
                          ]}
                       ]}
                    ]}
@@ -137,7 +144,7 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {:product, [], [:integer, :boolean]}
+      assert result == {:product, [], [{:basic, [], [:integer]}, {:basic, [], [:boolean]}]}
     end
 
     test "simple with remote types" do
@@ -160,7 +167,19 @@ defmodule Typist.ParserTest do
       result = Parser.parse(ast)
 
       assert result ==
-               {:product, [], [{:"::", [], [{[:Qux], :t}, :integer]}, {[:Bar], :t}]}
+               {:product, [],
+                [{:"::", [], [{[:Qux], :t}, {:basic, [], [:integer]}]}, {[:Bar], :t}]}
+    end
+
+    test "simple alias with atoms" do
+      ast =
+        quote do
+          {:some, any} | :none
+        end
+
+      result = Parser.parse(ast)
+
+      assert result == {:|, [], [{:product, [], [:some, {:basic, [], [:any]}]}, :none]}
     end
   end
 
@@ -174,7 +193,9 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {:record, [], [{:code, :binary}, {:price, :integer}]}
+      assert result ==
+               {:record, [],
+                [{:code, {:basic, [], [:binary]}}, {:price, {:basic, [], [:integer]}}]}
     end
 
     test "fields with remote types" do
@@ -186,7 +207,7 @@ defmodule Typist.ParserTest do
 
       result = Parser.parse(ast)
 
-      assert result == {:record, [], [{:code, {[:Foo], :t}}, {:price, :integer}]}
+      assert result == {:record, [], [{:code, {[:Foo], :t}}, {:price, {:basic, [], [:integer]}}]}
     end
 
     test "fields with product types" do
@@ -199,7 +220,11 @@ defmodule Typist.ParserTest do
       result = Parser.parse(ast)
 
       assert result ==
-               {:record, [], [{:code, {:product, [], [:integer, :boolean]}}, {:price, :integer}]}
+               {:record, [],
+                [
+                  {:code, {:product, [], [{:basic, [], [:integer]}, {:basic, [], [:boolean]}]}},
+                  {:price, {:basic, [], [:integer]}}
+                ]}
     end
 
     test "fields with union types" do
@@ -212,7 +237,11 @@ defmodule Typist.ParserTest do
       result = Parser.parse(ast)
 
       assert result ==
-               {:record, [], [{:code, {:|, [], [:integer, :boolean]}}, {:price, :integer}]}
+               {:record, [],
+                [
+                  {:code, {:|, [], [{:basic, [], [:integer]}, {:basic, [], [:boolean]}]}},
+                  {:price, {:basic, [], [:integer]}}
+                ]}
     end
 
     test "fields with union Remote types" do
@@ -225,7 +254,11 @@ defmodule Typist.ParserTest do
       result = Parser.parse(ast)
 
       assert result ==
-               {:record, [], [{:code, {:|, [], [{[:Foo], :t}, :boolean]}}, {:price, :integer}]}
+               {:record, [],
+                [
+                  {:code, {:|, [], [{[:Foo], :t}, {:basic, [], [:boolean]}]}},
+                  {:price, {:basic, [], [:integer]}}
+                ]}
     end
   end
 end

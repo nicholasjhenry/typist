@@ -5,7 +5,7 @@ defmodule Typist.TypeSpec do
     end
   end
 
-  def from_ast(term) when is_atom(term) do
+  def from_ast({:basic, _, [term]}) do
     quote do
       @type t :: %__MODULE__{value: unquote(term)}
     end
@@ -55,6 +55,10 @@ defmodule Typist.TypeSpec do
     [do_ast(head) | do_ast(tail)]
   end
 
+  defp do_ast({:product, _, params}) do
+    params |> Enum.map(&do_ast/1) |> List.to_tuple()
+  end
+
   defp do_ast({:|, _, params}) do
     {:|, [], do_ast(params)}
   end
@@ -71,8 +75,12 @@ defmodule Typist.TypeSpec do
     end
   end
 
-  defp do_ast(term) when is_atom(term) do
+  defp do_ast({:basic, [], [term]}) do
     {term, [], Elixir}
+  end
+
+  defp do_ast(term) when is_atom(term) do
+    term
   end
 
   defp do_ast([]) do

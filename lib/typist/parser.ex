@@ -110,9 +110,11 @@ defmodule Typist.Parser do
     {:->, [], [Enum.map(input, &perform/1)], perform(output)}
   end
 
-  # Parse basic types
-  defp perform({type, _, _})
-       when type in [:boolean, :integer, :term, :any, :number, :pid, :binary] do
+  defp perform({type, _, _}) when is_atom(type) do
+    {:basic, [], [type]}
+  end
+
+  defp perform(type) when is_atom(type) do
     type
   end
 

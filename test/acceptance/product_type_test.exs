@@ -8,7 +8,7 @@ defmodule Typist.ProductTypeTest do
     test "defines the type meta-data" do
       metadata = FirstLast.__type__()
 
-      assert metadata.ast == {:product, [], [{[:String], :t}, :integer]}
+      assert metadata.ast == {:product, [], [{[:String], :t}, {:basic, [], [:integer]}]}
       assert metadata.spec == "@type(t :: %__MODULE__{value: {String.t(), integer}})"
     end
 
@@ -27,7 +27,7 @@ defmodule Typist.ProductTypeTest do
     test "defines the type meta-data" do
       metadata = Foo.FirstLast.__type__()
 
-      assert metadata.ast == {:product, [], [{[:String], :t}, :integer]}
+      assert metadata.ast == {:product, [], [{[:String], :t}, {:basic, [], [:integer]}]}
       assert metadata.spec == "@type(t :: %__MODULE__{value: {String.t(), integer}})"
     end
 

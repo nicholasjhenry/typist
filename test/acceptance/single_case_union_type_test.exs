@@ -26,7 +26,7 @@ defmodule Typist.SingleCaseUnionTypeTest do
     test "defines the type meta-data" do
       metadata = Bar.__type__()
 
-      assert metadata.ast == :integer
+      assert metadata.ast == {:basic, [], [:integer]}
       assert metadata.spec == "@type(t :: %__MODULE__{value: :integer})"
     end
 
@@ -41,7 +41,7 @@ defmodule Typist.SingleCaseUnionTypeTest do
     test "defines the type meta-data" do
       metadata = Baz.__type__()
 
-      assert metadata.ast == {:product, [], [{[:String], :t}, :integer]}
+      assert metadata.ast == {:product, [], [{[:String], :t}, {:basic, [], [:integer]}]}
       assert metadata.spec == "@type(t :: %__MODULE__{value: {String.t(), integer}})"
     end
 
