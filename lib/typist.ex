@@ -5,7 +5,7 @@ defmodule Typist do
   alias Typist.{Generator, Parser}
 
   defmodule Metadata do
-    defstruct ast: nil, calling_module: nil, spec: nil
+    defstruct ast: nil, calling_module: nil, spec: nil, constructor: nil
   end
 
   defmacro __using__(_opts \\ []) do
