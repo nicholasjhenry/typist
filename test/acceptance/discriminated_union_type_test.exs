@@ -94,6 +94,7 @@ defmodule Typist.DiscriminatedUnionTypeTest do
                "@spec(new(EmailOnly.t() | PostOnly.t() | EmailAndPost.t()) :: t)"
 
       assert EmailOnly.__type__()
+      assert PostOnly.__type__()
     end
 
     test "defines a constructor function" do
