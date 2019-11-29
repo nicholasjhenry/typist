@@ -121,6 +121,18 @@ defmodule Typist.Code do
       def new(value) do
         struct!(__MODULE__, value: value)
       end
+
+      @spec value(t) :: unquote(TypeSpec.from_ast(ast))
+      def value(%__MODULE__{} = wrapper) do
+        wrapper.value
+      end
+
+      @spec apply(t, (unquote(TypeSpec.from_ast(ast)) -> any)) :: any
+      def apply(%__MODULE__{} = wrapper, func) do
+        func.(wrapper.value)
+      end
+
+      defoverridable new: 1, value: 1, apply: 2
     end
   end
 end
