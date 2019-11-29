@@ -20,7 +20,17 @@ defmodule Typist.Code do
         @type t :: %__MODULE__{unquote_splicing(TypeSpec.from_ast(ast))}
       end
 
-    metadata = %{metadata | spec: Macro.to_string(spec)}
+    constructor =
+      quote do
+        @spec new(%{unquote_splicing(TypeSpec.from_ast(ast))}) :: t
+      end
+
+    metadata = %{
+      metadata
+      | spec: Macro.to_string(spec),
+        constructor: Macro.to_string(constructor)
+    }
+
     struct = Enum.map(fields, fn {key, _} -> key end)
 
     quote do
