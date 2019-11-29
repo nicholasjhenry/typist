@@ -43,11 +43,15 @@ defmodule Typist.Generator do
     [new_code | perform(metadata, fields, code)]
   end
 
-  # Generate for PRODUCT
-  def perform(metadata, {:product, _, params} = ast, code) do
+  # Generate for PRODUCT, only wrap for aliased types
+  def perform(%{ast: ast} = metadata, {:product, _, params} = ast, code) do
     new_code = Code.wrapped_type(metadata, ast)
 
     [new_code | perform(metadata, params, code)]
+  end
+
+  def perform(metadata, {:product, _, params}, code) do
+    perform(metadata, params, code)
   end
 
   # Generate for a UNION type

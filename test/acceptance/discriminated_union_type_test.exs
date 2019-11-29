@@ -94,4 +94,20 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       assert %EmailOnly{value: %EmailContactInfo{value: "info@example.com"}} == contact_info
     end
   end
+
+  describe "starting with a product type" do
+    defmodule Maybe do
+      deftype {:some, any} | :none
+    end
+
+    test "defines the type meta-data" do
+      metadata = Maybe.__type__()
+
+      assert metadata.ast == {:|, [], [{:product, [], [:some, {:basic, [], [:any]}]}, :none]}
+    end
+
+    test "defines a constructor function" do
+      assert {:some, "Foo"} == Maybe.new({:some, "Foo"})
+    end
+  end
 end
