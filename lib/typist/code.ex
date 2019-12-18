@@ -8,6 +8,12 @@ defmodule Typist.Code do
     end
   end
 
+  def to_spec({:|, _, _} = ast) do
+    quote location: :keep do
+      @type t :: unquote(ast)
+    end
+  end
+
   # Convert a block to a struct
   def to_struct({:__block__, _, ast}) do
     ast = to_fields(ast) |> Map.new() |> Map.keys()

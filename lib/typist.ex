@@ -67,6 +67,29 @@ defmodule Typist do
   end
 
   # Define a single case union type inline
+  defp type(caller_module, {:"::", _, [{:__aliases__, _, module_name}, {:|, _, _} = type]}) do
+    alias_name = Module.concat([caller_module] ++ [List.first(module_name)])
+    module = Module.concat([caller_module] ++ module_name)
+
+    spec =
+      quote do
+        @type t :: unquote(type)
+      end
+
+    quote location: :keep do
+      alias unquote(alias_name)
+
+      defmodule unquote(module) do
+        defstruct [:value]
+
+        def __type__ do
+          %{spec: unquote(Macro.to_string(spec))}
+        end
+      end
+    end
+  end
+
+  # Define a single case union type inline
   defp type(caller_module, {:"::", _, [{:__aliases__, _, module_name}, type]}) do
     alias_name = Module.concat([caller_module] ++ [List.first(module_name)])
     module = Module.concat([caller_module] ++ module_name)
