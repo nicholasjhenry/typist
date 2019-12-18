@@ -13,6 +13,7 @@ defmodule Typist.RecordTypeTest do
 
       assert %Product{code: "ABC", price: 10_00}
       assert metadata.spec == "@type(t :: %__MODULE__{code: String.t(), price: integer()})"
+      assert metadata.constructor == "@spec(new(%{code: String.t(), price: integer()}) :: t)"
     end
   end
 
@@ -20,7 +21,7 @@ defmodule Typist.RecordTypeTest do
     defmodule Foo.Product do
       deftype do
         code :: String.t()
-        price :: integer
+        price :: integer()
       end
     end
 
@@ -28,7 +29,8 @@ defmodule Typist.RecordTypeTest do
       metadata = Foo.Product.__type__()
 
       assert %Foo.Product{code: "ABC", price: 10_00}
-      assert metadata.spec == "@type(t :: %__MODULE__{code: String.t(), price: integer})"
+      assert metadata.spec == "@type(t :: %__MODULE__{code: String.t(), price: integer()})"
+      assert metadata.constructor == "@spec(new(%{code: String.t(), price: integer()}) :: t)"
     end
   end
 end

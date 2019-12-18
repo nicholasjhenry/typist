@@ -44,7 +44,15 @@ defmodule Typist do
   defp type(_caller_module, do: block) do
     spec = Code.to_spec(block)
     struct = Code.to_struct(block)
-    type = %Type{spec: spec}
+
+    fields = Code.to_fields(block)
+
+    constructor =
+      quote do
+        @spec new(%{unquote_splicing(fields)}) :: t
+      end
+
+    type = %Type{spec: spec, constructor: constructor}
 
     quote location: :keep do
       unquote(struct)

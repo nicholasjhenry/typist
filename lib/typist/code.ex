@@ -23,6 +23,10 @@ defmodule Typist.Code do
     end
   end
 
+  def to_fields({:__block__, _, ast}) do
+    to_fields(ast)
+  end
+
   def to_fields([]) do
     []
   end
