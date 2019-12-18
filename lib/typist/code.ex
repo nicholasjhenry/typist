@@ -38,4 +38,19 @@ defmodule Typist.Code do
       {unquote(field), unquote(type)}
     end
   end
+
+  def module(metadata, content, extra \\ []) do
+    alias_name = Module.concat([metadata.caller_module] ++ [List.first(metadata.module_name)])
+    module = Module.concat([metadata.caller_module] ++ metadata.module_name)
+
+    quote do
+      unquote(extra)
+
+      alias unquote(alias_name)
+
+      defmodule unquote(module) do
+        unquote(content)
+      end
+    end
+  end
 end
