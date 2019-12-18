@@ -204,6 +204,7 @@ defmodule Typist do
 
       unquote(type.constructor)
       def new(value), do: struct!(__MODULE__, value)
+      defoverridable new: 1
     end
   end
 
@@ -232,6 +233,7 @@ defmodule Typist do
       unquote(type.spec)
       unquote(type.constructor)
       def new(value), do: value
+      defoverridable new: 1
 
       unquote(type_code(type))
     end
@@ -291,6 +293,8 @@ defmodule Typist do
       def value(%__MODULE__{} = wrapper) do
         wrapper.value
       end
+
+      defoverridable new: 1
     end
   end
 
@@ -319,6 +323,7 @@ defmodule Typist do
         unquote(type.spec)
         unquote(type.constructor)
         def new(value), do: value
+        defoverridable new: 1
         unquote(type_code(type))
       end
 
