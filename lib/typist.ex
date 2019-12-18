@@ -81,7 +81,13 @@ defmodule Typist do
 
     type = %Type{spec: spec, constructor: constructor}
 
-    type_code(type)
+    quote do
+      unquote(type.spec)
+      unquote(type.constructor)
+      def new(value), do: value
+
+      unquote(type_code(type))
+    end
   end
 
   # Define a single case union type inline
@@ -106,7 +112,11 @@ defmodule Typist do
     type = %Type{spec: spec, constructor: constructor}
 
     quote do
+      unquote(type.spec)
       defstruct [:value]
+
+      unquote(type.constructor)
+      def new(value), do: struct!(__MODULE__, value: value)
 
       unquote(type_code(type))
     end
@@ -132,7 +142,14 @@ defmodule Typist do
 
     type = %Type{spec: spec, constructor: constructor}
 
-    content = type_code(type)
+    content =
+      quote do
+        unquote(type.spec)
+        unquote(type.constructor)
+        def new(value), do: value
+        unquote(type_code(type))
+      end
+
     Code.module(content, caller_module, module_name, types)
   end
 

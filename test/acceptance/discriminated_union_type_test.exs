@@ -19,6 +19,10 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       assert metadata.constructor ==
                "@spec(new(Nickname.t() | FirstLast.t() | FormalName.t() | binary) :: t)"
     end
+
+    test "defines a constructor function" do
+      assert %Nickname{value: "John"} == Name.new(%Nickname{value: "John"})
+    end
   end
 
   describe "defining the type in a module" do
@@ -37,6 +41,10 @@ defmodule Typist.DiscriminatedUnionTypeTest do
 
       assert metadata.constructor ==
                "@spec(new(Nickname.t() | FirstLast.t() | FormalName.t() | binary) :: t)"
+    end
+
+    test "defines a constructor function" do
+      assert %Baz.Nickname{value: "John"} == Baz.Name.new(%Baz.Nickname{value: "John"})
     end
   end
 
@@ -59,6 +67,13 @@ defmodule Typist.DiscriminatedUnionTypeTest do
 
       assert EmailOnly.__type__()
       assert PostOnly.__type__()
+    end
+
+    test "defines a constructor function" do
+      contact_info =
+        "info@example.com" |> EmailContactInfo.new() |> EmailOnly.new() |> ContactInfo.new()
+
+      assert %EmailOnly{value: %EmailContactInfo{value: "info@example.com"}} == contact_info
     end
   end
 end
