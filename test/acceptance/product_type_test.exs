@@ -9,6 +9,7 @@ defmodule Typist.ProductTypeTest do
       metadata = FirstLast.__type__()
 
       assert metadata.spec == "@type(t :: %__MODULE__{value: {String.t(), integer}})"
+      assert metadata.constructor == "@spec(new({String.t(), integer}) :: t)"
     end
   end
 
@@ -23,6 +24,7 @@ defmodule Typist.ProductTypeTest do
       metadata = Foo.FirstLast.__type__()
 
       assert metadata.spec == "@type(t :: %__MODULE__{value: {String.t(), integer}})"
+      assert metadata.constructor == "@spec(new({String.t(), integer}) :: t)"
     end
   end
 end

@@ -90,7 +90,12 @@ defmodule Typist do
         @type t :: %__MODULE__{value: unquote(type)}
       end
 
-    type = %Type{spec: spec}
+    constructor =
+      quote do
+        @spec new(unquote(type)) :: t
+      end
+
+    type = %Type{spec: spec, constructor: constructor}
 
     quote do
       defstruct [:value]
