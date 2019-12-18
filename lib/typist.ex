@@ -55,8 +55,12 @@ defmodule Typist do
     type = %Type{spec: spec, constructor: constructor}
 
     quote location: :keep do
+      unquote(type.spec)
       unquote(struct)
       unquote(type_code(type))
+
+      unquote(type.constructor)
+      def new(value), do: struct!(__MODULE__, value)
     end
   end
 
