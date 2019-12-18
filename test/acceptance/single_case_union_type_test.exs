@@ -67,4 +67,22 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert "ABC123" == Foo.value(product_code)
     end
   end
+
+  import ExUnit.CaptureIO
+
+  describe "inspecting" do
+    test "returns a string representation for a value does implement String.Chars" do
+      value = Foo.new("hello world")
+
+      inspection = fn -> IO.inspect(value) end
+      assert capture_io(inspection) == "#Typist.SingleCaseUnionTypeTest.Foo<hello world>\n"
+    end
+
+    test "returns a string representation for a value that does not implement String.Chars" do
+      value = Foo.new({:foo, "bar"})
+
+      inspection = fn -> IO.inspect(value) end
+      assert capture_io(inspection) == "#Typist.SingleCaseUnionTypeTest.Foo<{:foo, \"bar\"}>\n"
+    end
+  end
 end

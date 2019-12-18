@@ -116,6 +116,21 @@ defmodule Typist do
     type = %Type{spec: spec, constructor: constructor}
 
     quote do
+      defimpl Inspect do
+        import Inspect.Algebra
+
+        def inspect(struct, opts) do
+          display =
+            if String.Chars.impl_for(struct.value) do
+              to_string(struct.value)
+            else
+              inspect(struct.value)
+            end
+
+          concat(["#", to_doc(@for, opts), "<", display, ">"])
+        end
+      end
+
       unquote(type.spec)
       defstruct [:value]
 
