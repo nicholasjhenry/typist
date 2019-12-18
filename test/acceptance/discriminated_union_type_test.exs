@@ -14,8 +14,23 @@ defmodule Typist.DiscriminatedUnionTypeTest do
     test "defines the type meta-data" do
       metadata = Name.__type__()
 
-      assert metadata.spec ==
-               "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t() | binary)"
+      assert metadata.spec == "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t() | binary)"
+    end
+  end
+
+  describe "defining the type in a module" do
+    defmodule Baz do
+      deftype Nickname :: String.t()
+
+      defmodule Name do
+        deftype Nickname.t() | FirstLast.t() | FormalName.t()
+      end
+    end
+
+    test "defines the type meta-data" do
+      metadata = Baz.Name.__type__()
+
+      assert metadata.spec == "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t())"
     end
   end
 end
