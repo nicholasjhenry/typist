@@ -33,4 +33,23 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       assert metadata.spec == "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t())"
     end
   end
+
+  describe "defining multiple inline remote aliases" do
+    deftype EmailContactInfo :: String.t()
+
+    defunion ContactInfo do
+      EmailOnly :: EmailContactInfo.t()
+      PostOnly :: PostContactInfo.t()
+      EmailAndPost :: {EmailContactInfo.t(), PostalContactInfo.t()}
+    end
+
+    test "defines the remote alias" do
+      metadata = ContactInfo.__type__()
+
+      assert metadata.spec == "@type(t :: EmailOnly.t() | PostOnly.t() | EmailAndPost.t())"
+
+      assert EmailOnly.__type__()
+      assert PostOnly.__type__()
+    end
+  end
 end
