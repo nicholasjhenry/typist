@@ -128,6 +128,11 @@ defmodule Typist do
       def apply(%__MODULE__{} = wrapper, func) do
         func.(wrapper.value)
       end
+
+      @spec value(t) :: unquote(typex)
+      def value(%__MODULE__{} = wrapper) do
+        wrapper.value
+      end
     end
   end
 

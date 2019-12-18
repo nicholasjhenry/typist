@@ -60,4 +60,11 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert "value is ABC123" == Foo.apply(product_code, func)
     end
   end
+
+  describe "unwrapping" do
+    test "returns the wrapped value" do
+      product_code = Foo.new("ABC123")
+      assert "ABC123" == Foo.value(product_code)
+    end
+  end
 end
