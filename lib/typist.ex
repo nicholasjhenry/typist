@@ -102,15 +102,15 @@ defmodule Typist do
   end
 
   # Define a single case union or product type inside module
-  defp type(_caller_module, type) do
+  defp type(_caller_module, typex) do
     spec =
       quote do
-        @type t :: %__MODULE__{value: unquote(type)}
+        @type t :: %__MODULE__{value: unquote(typex)}
       end
 
     constructor =
       quote do
-        @spec new(unquote(type)) :: t
+        @spec new(unquote(typex)) :: t
       end
 
     type = %Type{spec: spec, constructor: constructor}
@@ -123,6 +123,11 @@ defmodule Typist do
       def new(value), do: struct!(__MODULE__, value: value)
 
       unquote(type_code(type))
+
+      @spec apply(t, (unquote(typex) -> any)) :: any
+      def apply(%__MODULE__{} = wrapper, func) do
+        func.(wrapper.value)
+      end
     end
   end
 

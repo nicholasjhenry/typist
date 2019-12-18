@@ -52,4 +52,12 @@ defmodule Typist.SingleCaseUnionTypeTest do
       assert %Baz{value: {"ABC", 123}} == Baz.new({"ABC", 123})
     end
   end
+
+  describe "applying" do
+    test "applies the function to the unwrapped value" do
+      product_code = Foo.new("ABC123")
+      func = fn value -> "value is #{value}" end
+      assert "value is ABC123" == Foo.apply(product_code, func)
+    end
+  end
 end
