@@ -15,6 +15,9 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       metadata = Name.__type__()
 
       assert metadata.spec == "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t() | binary)"
+
+      assert metadata.constructor ==
+               "@spec(new(Nickname.t() | FirstLast.t() | FormalName.t() | binary) :: t)"
     end
   end
 
@@ -23,14 +26,17 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       deftype Nickname :: String.t()
 
       defmodule Name do
-        deftype Nickname.t() | FirstLast.t() | FormalName.t()
+        deftype Nickname.t() | FirstLast.t() | FormalName.t() | binary
       end
     end
 
     test "defines the type meta-data" do
       metadata = Baz.Name.__type__()
 
-      assert metadata.spec == "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t())"
+      assert metadata.spec == "@type(t :: Nickname.t() | FirstLast.t() | FormalName.t() | binary)"
+
+      assert metadata.constructor ==
+               "@spec(new(Nickname.t() | FirstLast.t() | FormalName.t() | binary) :: t)"
     end
   end
 
@@ -47,6 +53,9 @@ defmodule Typist.DiscriminatedUnionTypeTest do
       metadata = ContactInfo.__type__()
 
       assert metadata.spec == "@type(t :: EmailOnly.t() | PostOnly.t() | EmailAndPost.t())"
+
+      assert metadata.constructor ==
+               "@spec(new(EmailOnly.t() | PostOnly.t() | EmailAndPost.t()) :: t)"
 
       assert EmailOnly.__type__()
       assert PostOnly.__type__()

@@ -2,7 +2,7 @@ defmodule Typist do
   alias Typist.Code
 
   defmodule Type do
-    defstruct [:spec]
+    defstruct spec: [], constructor: []
   end
 
   defmacro __using__(_opts) do
@@ -17,6 +17,20 @@ defmodule Typist do
 
   defmacro deftype(block) do
     type(__CALLER__.module, block)
+  end
+
+  def type_code(type) do
+    quote location: :keep do
+      def __type__ do
+        unquote(
+          Macro.escape(%{
+            type
+            | spec: Macro.to_string(type.spec),
+              constructor: Macro.to_string(type.constructor)
+          })
+        )
+      end
+    end
   end
 
   # Define a record type inline
@@ -34,10 +48,7 @@ defmodule Typist do
 
     quote location: :keep do
       unquote(struct)
-
-      def __type__ do
-        unquote(Macro.escape(%{type | spec: Macro.to_string(type.spec)}))
-      end
+      unquote(type_code(type))
     end
   end
 
@@ -55,13 +66,14 @@ defmodule Typist do
         @type t :: unquote(type)
       end
 
-    type = %Type{spec: spec}
-
-    quote location: :keep do
-      def __type__ do
-        unquote(Macro.escape(%{type | spec: Macro.to_string(type.spec)}))
+    constructor =
+      quote do
+        @spec new(unquote(type)) :: t
       end
-    end
+
+    type = %Type{spec: spec, constructor: constructor}
+
+    type_code(type)
   end
 
   # Define a single case union type inline
@@ -83,9 +95,7 @@ defmodule Typist do
     quote do
       defstruct [:value]
 
-      def __type__ do
-        unquote(Macro.escape(%{type | spec: Macro.to_string(type.spec)}))
-      end
+      unquote(type_code(type))
     end
   end
 
@@ -97,20 +107,19 @@ defmodule Typist do
     types = types(caller_module, block)
     spec = union_spec(block)
 
+    constructor =
+      quote do
+        @spec new(unquote(spec)) :: t
+      end
+
     spec =
       quote do
         @type t :: unquote(spec)
       end
 
-    type = %Type{spec: spec}
+    type = %Type{spec: spec, constructor: constructor}
 
-    content =
-      quote do
-        def __type__ do
-          unquote(Macro.escape(%{type | spec: Macro.to_string(type.spec)}))
-        end
-      end
-
+    content = type_code(type)
     Code.module(content, caller_module, module_name, types)
   end
 
