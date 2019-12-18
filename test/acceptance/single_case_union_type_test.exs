@@ -13,6 +13,7 @@ defmodule Typist.SingleCaseUnionTypeTest do
 
       assert %Foo{value: "ABC"}
       assert metadata.spec == "@type(t :: %__MODULE__{value: String.t()})"
+      assert metadata.constructor == "@spec(new(String.t()) :: t)"
     end
   end
 
@@ -24,6 +25,7 @@ defmodule Typist.SingleCaseUnionTypeTest do
 
       assert %Bar{value: 123}
       assert metadata.spec == "@type(t :: %__MODULE__{value: integer})"
+      assert metadata.constructor == "@spec(new(integer) :: t)"
     end
   end
 
@@ -35,6 +37,7 @@ defmodule Typist.SingleCaseUnionTypeTest do
 
       assert %Baz{value: {"ABC", 123}}
       assert metadata.spec == "@type(t :: %__MODULE__{value: {String.t(), integer}})"
+      assert metadata.constructor == "@spec(new({String.t(), integer}) :: t)"
     end
   end
 end
