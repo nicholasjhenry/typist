@@ -39,9 +39,9 @@ defmodule Typist.Code do
     end
   end
 
-  def module(metadata, content, extra \\ []) do
-    alias_name = Module.concat([metadata.caller_module] ++ [List.first(metadata.module_name)])
-    module = Module.concat([metadata.caller_module] ++ metadata.module_name)
+  def module(content, caller_module, module_name, extra \\ []) do
+    alias_name = Module.concat([caller_module] ++ [List.first(module_name)])
+    module = Module.concat([caller_module] ++ module_name)
 
     quote do
       unquote(extra)
