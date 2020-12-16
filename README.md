@@ -56,6 +56,7 @@ defmodule Product do
 end
 ```
 
-## About CivilCode Inc
+## About the CivilCode Collective
 
-CivilCode Inc. is a [custom software development](https://www.civilcode.io) studio developing tailored business applications with [Elixir](http://elixir-lang.org/) and [Phoenix](http://www.phoenixframework.org/) in Montreal, Canada.
+The [CivilCode Collective](http://www.civilcode.io), a group of freelance developers, build tailored business applications in [Elixir](http://elixir-lang.org/) and [Phoenix](http://www.phoenixframework.org/)
+in Montreal, Canada.
